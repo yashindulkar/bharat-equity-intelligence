@@ -1,11 +1,11 @@
 # ADR-0002: Phase 1 Python toolchain
 
-- Status: Proposed
+- Status: Accepted for Phase 1 Task 1
 - Date: 2026-07-11
 
 ## Decision
 
-Target Python 3.12 with a `src` layout. Phase 0 selects Ruff 0.11.0 for linting, mypy 1.15.0 in strict mode, and pytest 8.3.5, with exact Python 3.12 resolved pins in `requirements-dev.txt`. A package manager and hashed cross-platform application lock remain proposed Phase 1 decisions. Add no dataframe library until a concrete benchmarked need exists.
+Target Python 3.12 with a `src` layout. Use exact resolved pins in `requirements-dev.txt`, Ruff 0.11.0, mypy 1.15.0 and pytest 8.3.5. `uv` is preferred when available, but was not installed in the reviewed environment; adopting it and generating a hashed cross-platform lock remains a release item. Add no dataframe library until a concrete benchmarked need exists.
 
 ## Consequences
 

@@ -1,4 +1,4 @@
-name: Phase 0 quality
+name: Phase 1 quality
 
 on:
   pull_request:
@@ -20,8 +20,21 @@ jobs:
           cache-dependency-path: requirements-dev.txt
       - name: Install exact Phase 0 quality tools
         run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
-      - name: Structural checks, compile, lint, strict typing and tests
+      - name: Structural checks, format, lint, strict typing and tests
         run: make check
+      - name: Category checks
+        run: make test-unit test-property test-leakage test-integration test-security
+      - name: Build package
+        run: python -m pip install build==1.2.2.post1 && make build
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pip-audit==2.9.0 && python -m pip_audit -r requirements-dev.txt
 
   secret-scan:
     runs-on: ubuntu-latest

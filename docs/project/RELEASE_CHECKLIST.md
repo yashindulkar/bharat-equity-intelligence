@@ -1,5 +1,17 @@
 # Release Checklist
 
+## Phase 1 Task 1 evidence (2026-07-11)
+
+- [x] Synthetic-only domain, PIT, provider, manifest and CLI foundation exists.
+- [x] Independent identity, PIT, corporate-action and data/security reviews ran (four agents total).
+- [x] Unit/property-style/leakage/integration/security tests run offline.
+- [ ] Cross-record identity validators and complete adversarial fixture inventory pass.
+- [ ] Atomic evidence writes and verified reads pass.
+- [ ] Hash-locked environment, dependency vulnerability scan and immutable CI action pins pass.
+- [ ] Draft PR opened against an aligned `main` (GitHub authentication currently absent).
+
+**Release decision: FAIL.** The implementation is a reviewed foundation, but the unchecked critical items prevent claiming the Task 1 definition of done.
+
 ## Phase 0
 
 - [x] `MASTER_SPEC.md` read fully and preserved as authority

@@ -5,18 +5,33 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = (
-    "AGENTS.md", "README.md", "CONTRIBUTING.md", "SECURITY.md", ".gitignore",
-    ".env.example", ".github/workflows/phase0.yml", "docs/project/MASTER_PLAN.md",
-    "docs/project/DEPENDENCY_GRAPH.md", "docs/project/ENVIRONMENT_ASSESSMENT.md",
-    "docs/project/AGENT_TASKS.md", "docs/project/DECISION_LOG.md",
-    "docs/project/RISK_REGISTER.md", "docs/project/OPEN_QUESTIONS.md",
-    "docs/project/RELEASE_CHECKLIST.md", "docs/product/PRODUCT_REQUIREMENTS.md",
-    "docs/architecture/SYSTEM_ARCHITECTURE.md", "docs/data/DATA_SOURCE_MATRIX.md",
-    "docs/data/DATA_GOVERNANCE.md", "docs/compliance/REGULATORY_BOUNDARY.md",
-    "docs/compliance/DATA_LICENSING_MATRIX.md", "docs/security/THREAT_MODEL.md",
-    "docs/research/BACKTESTING_STANDARD.md", "docs/research/FACTOR_RESEARCH_STANDARD.md",
+    "AGENTS.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    ".gitignore",
+    ".env.example",
+    ".github/workflows/phase0.yml",
+    "docs/project/MASTER_PLAN.md",
+    "docs/project/DEPENDENCY_GRAPH.md",
+    "docs/project/ENVIRONMENT_ASSESSMENT.md",
+    "docs/project/AGENT_TASKS.md",
+    "docs/project/DECISION_LOG.md",
+    "docs/project/RISK_REGISTER.md",
+    "docs/project/OPEN_QUESTIONS.md",
+    "docs/project/RELEASE_CHECKLIST.md",
+    "docs/product/PRODUCT_REQUIREMENTS.md",
+    "docs/architecture/SYSTEM_ARCHITECTURE.md",
+    "docs/data/DATA_SOURCE_MATRIX.md",
+    "docs/data/DATA_GOVERNANCE.md",
+    "docs/compliance/REGULATORY_BOUNDARY.md",
+    "docs/compliance/DATA_LICENSING_MATRIX.md",
+    "docs/security/THREAT_MODEL.md",
+    "docs/research/BACKTESTING_STANDARD.md",
+    "docs/research/FACTOR_RESEARCH_STANDARD.md",
     "docs/risk/CAPITAL_PROTECTION_POLICY.md",
-    "docs/agent-reviews/product-workflow.md", "docs/agent-reviews/data-licensing.md",
+    "docs/agent-reviews/product-workflow.md",
+    "docs/agent-reviews/data-licensing.md",
     "docs/agent-reviews/quantitative-point-in-time.md",
     "docs/agent-reviews/portfolio-capital-protection.md",
     "docs/agent-reviews/security-privacy-regulatory.md",
@@ -25,9 +40,11 @@ REQUIRED = (
 
 missing = [path for path in REQUIRED if not (ROOT / path).is_file()]
 assert not missing, f"missing required files: {missing}"
-assert not any((ROOT / ".env.example").read_text().splitlines()[i].split("=", 1)[1]
-               for i, line in enumerate((ROOT / ".env.example").read_text().splitlines())
-               if re.match(r".*(?:KEY|TOKEN|SECRET)=", line))
+assert not any(
+    (ROOT / ".env.example").read_text().splitlines()[i].split("=", 1)[1]
+    for i, line in enumerate((ROOT / ".env.example").read_text().splitlines())
+    if re.match(r".*(?:KEY|TOKEN|SECRET)=", line)
+)
 master = (ROOT / "MASTER_SPEC.md").read_text()
 assert "Phase 0 — Discovery and governance" in master
 assert "No production code beyond scaffolding" in master

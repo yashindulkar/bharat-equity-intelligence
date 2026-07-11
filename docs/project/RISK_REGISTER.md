@@ -16,5 +16,9 @@
 | R-12 | Scope inflation delays usable evidence | High / Medium | Phase-specific boundaries and gates | Product/orchestrator |
 | R-13 | Immutable audit conflicts with correction/erasure | Medium / High | Pseudonymous append-only facts; separate mutable identity; counsel | Security/privacy |
 | R-14 | Empty repo/history alignment mistakes | Medium / Medium | Confirm branch tracking/commit policy before publishing | Maintainer |
+| R-15 | Incomplete cross-record identity/interval validation | High / Critical | Add overlap, uniqueness, recycled-symbol and ambiguity validators before real ingestion | Domain + independent reviewer |
+| R-16 | Synthetic evidence store lacks atomic verified reads | Medium / High | Atomic create-only writes and hash-on-read before non-demo use | Data/security |
+| R-17 | Dependency lock and vulnerability evidence incomplete | Medium / High | Adopt uv/hash lock and run dependency audit; release remains FAIL | Architecture/security |
+| R-18 | Corporate-action support mistaken for production-grade | High / Critical | Prominent limitation; only synthetic split/bonus invariant demo; unsupported/conflicting events block | Data + reviewer |
 
 Critical risks block the applicable release until evidence is attached; “accepted risk” requires a named human and expiry date.

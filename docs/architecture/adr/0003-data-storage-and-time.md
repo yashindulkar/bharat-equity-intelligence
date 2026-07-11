@@ -1,11 +1,11 @@
 # ADR-0003: Evidence, analytical storage and time
 
-- Status: Proposed
+- Status: Partially Accepted
 - Date: 2026-07-11
 
 ## Decision
 
-Subject to provider rights, retain content-hashed raw evidence and versioned Parquet analytical snapshots queried with DuckDB. Defer PostgreSQL to operational application state; do not dual-write in Phase 1. Store UTC timestamps and define effective/publication/observation/ingestion/validation/usable/supersession times.
+For synthetic Task 1, retain content-hashed raw evidence as canonical JSON and defer Parquet/DuckDB until justified. Defer PostgreSQL; do not dual-write. Store UTC timestamps and define effective/publication/observation/ingestion/validation/usable/supersession times.
 
 ## Consequences
 

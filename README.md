@@ -1,5 +1,9 @@
 # Bharat Long-Term Equity Intelligence
 
+Phase 1 Task 1 provides an offline, synthetic-only foundation for stable identity, point-in-time records, selected corporate-action invariants, deterministic manifests, typed abstention and narrow provider ports. It contains no real market ingestion, recommendation, backtest, allocation, UI, ML, broker operation or profitability claim.
+
+Run the demo with `PYTHONPATH=src python -m bharat_equity.cli --json`. All fixture names and identifiers are deliberately impossible and marked `SYNTHETIC`.
+
 Private, research-only decision support for long-term Indian equity analysis. It is not a promise of returns, investment advice, or an order-execution system. Equity investments can lose capital; outputs may be wrong.
 
 ## Status
