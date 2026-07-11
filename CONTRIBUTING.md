@@ -6,6 +6,9 @@
 4. Add tests before financial or risk logic: unit, golden, property, leakage, and contract tests as applicable.
 5. Run `make check`. Do not merge with critical security/data-quality findings, unsupported claims, or unresolved licensed-data use.
 
-Formatting/linting/type proposal for Phase 1: Ruff format + lint, mypy strict, pytest, 100-character line target, Python 3.12, explicit timezone-aware datetimes, `Decimal` for money. These conventions become binding only after ADR-0002 is accepted and the lockfile exists.
+Phase 0 quality tools and their Python 3.12 dependencies are pinned in `requirements-dev.txt`: Ruff
+lint, strict mypy, and pytest.
+Use a 100-character line target, Python 3.12, explicit timezone-aware datetimes, and `Decimal`
+for money. A full application dependency lock remains a Phase 1 task.
 
 Reviews must challenge methodology. Authors cannot be the sole validators of financial calculations, backtests, or critical security findings.

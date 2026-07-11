@@ -8,6 +8,13 @@ version = "0.0.0"
 description = "Phase 0 scaffold for private Indian-equity research decision support"
 requires-python = ">=3.12"
 
+[project.optional-dependencies]
+dev = [
+    "mypy==1.15.0",
+    "pytest==8.3.5",
+    "ruff==0.11.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
@@ -15,3 +22,10 @@ addopts = "-ra"
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

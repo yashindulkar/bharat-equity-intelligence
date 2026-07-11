@@ -30,7 +30,7 @@ Entity, security and exchange listing are distinct. ISIN/symbol are effective-da
 
 ## Technology proposal
 
-Python 3.12; stdlib domain objects; Pydantic at I/O boundaries when justified; Parquet analytical snapshots and DuckDB local queries; Ruff, one strict type checker, pytest and Hypothesis. `uv` is proposed but unavailable locally. PostgreSQL, FastAPI, Next.js, workflow engines, Docker services and OpenTelemetry are deferred until their phase/use case.
+Python 3.12; stdlib domain objects; Pydantic at I/O boundaries when justified; Parquet analytical snapshots and DuckDB local queries. Phase 0 uses exact direct pins for Ruff, strict mypy and pytest. A complete application dependency lock and package-manager choice remain Phase 1 decisions. PostgreSQL, FastAPI, Next.js, workflow engines, Docker services and OpenTelemetry are deferred until their phase/use case.
 
 ## Failure behavior and explainability
 

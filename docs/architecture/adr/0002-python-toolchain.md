@@ -5,8 +5,8 @@
 
 ## Decision
 
-Target Python 3.12 with a `src` layout; propose `uv` locking, Ruff format/lint, one strict checker (mypy versus pyright unresolved), pytest and Hypothesis. Keep core/provider/dev groups separate. Add no dataframe library until a concrete benchmarked need exists.
+Target Python 3.12 with a `src` layout. Phase 0 selects Ruff 0.11.0 for linting, mypy 1.15.0 in strict mode, and pytest 8.3.5, with exact Python 3.12 resolved pins in `requirements-dev.txt`. A package manager and hashed cross-platform application lock remain proposed Phase 1 decisions. Add no dataframe library until a concrete benchmarked need exists.
 
 ## Consequences
 
-The local machine has Python 3.12.4, mypy and pytest but lacks `uv` and Ruff. Phase 0 uses a standard-library structural check; Phase 1 must install, pin and verify the selected tools before this ADR becomes Accepted.
+The structural checker remains standard-library-only. Tool availability is not inferred from the host: contributors and CI install the declared versions before running `make check`. Host-specific observations are recorded separately in `docs/project/ENVIRONMENT_ASSESSMENT.md`.

@@ -18,13 +18,17 @@ Phase 0 governance and architecture only. No data pipeline, ranking, backtest, s
 
 ## Development
 
-Prerequisites proposed for Phase 1: Python 3.12+, `uv`, GNU Make-compatible command runner, and Git. The current machine has Python 3.12.4 but not `uv` or Ruff. Dependency installation is intentionally deferred until ADR approval.
+Use Python 3.12. Install the exact Phase 0 quality-tool versions in an isolated environment:
 
 ```sh
-make check
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+PATH="$PWD/.venv/bin:$PATH" make check
 ```
 
-This currently validates repository structure and documentation invariants without installing dependencies.
+`make check` runs the repository structural/link checks, Python compilation, Ruff linting, strict
+mypy typing, and pytest. Environment observations from Phase 0 are recorded in the
+[environment assessment](docs/project/ENVIRONMENT_ASSESSMENT.md), not treated as permanent prerequisites.
 
 ## Authority and safety
 

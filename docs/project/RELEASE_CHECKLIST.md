@@ -4,13 +4,17 @@
 
 - [x] `MASTER_SPEC.md` read fully and preserved as authority
 - [x] Repository/environment assessed without exposing credentials
-- [x] Six skeptical specialist workstreams reviewed
+- [x] Six skeptical specialist workstreams reviewed by three independent subagent runs; method and
+      limitation recorded in `docs/agent-reviews/`
 - [x] Required documents, ADRs, structure and offline check created
 - [x] Facts/assumptions/proposals/open questions distinguished
 - [x] MVP/V1/later boundaries and Phase 1 criteria defined
 - [x] No data, backtest, recommendation, profit claim or broker order code created
 - [ ] Human confirms proposed phase interpretation and deferred legal/data/license decisions
 - [ ] Independent human/legal review of regulatory and licensing conclusions
+
+The Phase 0 custom placeholder assertion is not a secret scanner. CI runs Gitleaks separately.
+Dependency-vulnerability scanning and a hashed cross-platform lock are Phase 1 release-blocking tasks.
 
 ## Every later phase
 

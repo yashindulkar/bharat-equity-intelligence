@@ -18,7 +18,7 @@ Phase 1 protects source integrity, provider credentials, code/dependencies, rese
 
 ## Phase 1 security acceptance
 
-No network in unit tests; empty secret placeholders; secret/dependency scans in CI after toolchain lock; hostile fixtures; bounded parsing; no secrets/personal/licensed data in Git/logs; reason-coded fail-closed output; hashes and reproducible manifests. Hash chaining is tamper-evident, not automatically tamper-proof.
+No network in unit tests; empty secret placeholders; CI secret scanning; hostile fixtures; bounded parsing; no secrets/personal/licensed data in Git/logs; reason-coded fail-closed output; hashes and reproducible manifests. The custom `.env.example` assertion only verifies selected placeholders are empty—it is not a repository secret scanner. Dependency-vulnerability scanning and a complete dependency lock remain Phase 1 release-blocking tasks. Hash chaining is tamper-evident, not automatically tamper-proof.
 
 ## Privacy lifecycle
 

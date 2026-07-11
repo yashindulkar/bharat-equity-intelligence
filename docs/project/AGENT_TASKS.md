@@ -9,4 +9,9 @@
 | Security/privacy/regulatory | Boundary and threat model | Private family use is not a safe-harbor conclusion; personal data and personalized outputs require counsel/security gates |
 | Architecture/DX | ADRs and scaffold | Modular monolith/minimal Python stack is suitable; provider and data contracts must precede frameworks |
 
+The actual review method and concurrency limitation are recorded in
+[`docs/agent-reviews/`](../agent-reviews/README.md). Six topical records came from three independent
+subagent runs, with two related workstreams assigned to each subagent; they were not six independent
+reviewers.
+
 Phase 1 ownership must be non-overlapping: data-contract author, independent PIT reviewer, provider adapter author, financial-formula reviewer, and security reviewer. No author closes their own critical finding.
