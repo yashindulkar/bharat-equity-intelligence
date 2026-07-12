@@ -15,3 +15,5 @@ Accessed 2026-07-11. A URL verifies an official offering/policy, not suitability
 Required contract evidence: legal entity/product/version; fields/venue/history; publication and revision support; delisted coverage; action semantics; SLA/rate/cost; private research/backtest/display/derived/model rights; retention/cache/backup/fixture/termination/deletion; attribution; DPA/security; reviewer and approval date.
 
 **Rejected assumption:** exchange webpages, bhavcopies, current constituent CSVs or convenience libraries alone satisfy historical PIT and production rights.
+
+**Task 2 status (2026-07-13):** zero providers evaluated and zero approved. The RFI and synthetic scorecard are now defined; annual budget and exact products remain open. No page was scraped and no real payload was obtained.

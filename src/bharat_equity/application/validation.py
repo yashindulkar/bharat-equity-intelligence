@@ -33,6 +33,14 @@ REASON_CLASSIFICATION: dict[ReasonCode, ReasonSeverity] = {
     ReasonCode.NO_SUITABLE_CANDIDATE: ReasonSeverity.INSUFFICIENT_EVIDENCE,
     ReasonCode.DUPLICATE_SOURCE_RECORD: ReasonSeverity.HARD_BLOCK,
     ReasonCode.EVIDENCE_INTEGRITY_FAILURE: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.PERMISSION_UNKNOWN: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.AGREEMENT_EXPIRED: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.PURPOSE_NOT_PERMITTED: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.PIT_UNSUPPORTED: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.RAW_RETENTION_FORBIDDEN: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.REVISION_HANDLING_UNKNOWN: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.DELISTED_COVERAGE_MISSING: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.PROVIDER_NOT_APPROVED: ReasonSeverity.HARD_BLOCK,
 }
 
 

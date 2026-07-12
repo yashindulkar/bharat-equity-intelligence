@@ -2,9 +2,9 @@
 
 ## Human/legal decisions
 
-1. Who is the decision-maker, operator, data fiduciary, and intended viewer—the owner, mother, or both?
-2. Will outputs ever leave the household, involve consideration, publication, notifications to others, or recurring personalized advice?
-3. What data budget, exchanges, history depth, hosting country, retention period and benchmark are acceptable?
+1. **Partially resolved 2026-07-13:** Yash is operator; Yash's mother is investor/final decision-maker. Who is data fiduciary and is the viewer list exclusively those two?
+2. **Resolved for current scope:** private household research; no paid/public/third-party/social distribution. Any future expansion requires new review.
+3. **Partially resolved:** NSE, intended initial Nifty 200, EOD, local-first Mac; what hosting country, history depth, retention, backup/cloud policy, annual budget and licensed TRI benchmark apply?
 4. Which provider contracts permit raw retention, derived features/models, backup, fixtures, display, citations, and post-termination reproduction?
 5. What code license and contributor model is intended?
 
@@ -20,3 +20,9 @@
 
 11. Capacity for loss, liquidity needs, emergency fund, household exposures and approved numerical limits?
 12. Authentication roles, recovery channel, security reporting address, telemetry/AI vendors, deletion/correction and incident owner?
+
+## Task 2 provider-entry decisions
+
+13. Which exact provider/product/agreement passes the RFI, field mapping and usage-policy approval?
+14. Does an agreement explicitly permit licensed raw payload transfer to any named external AI provider? Default is no.
+15. What tolerances and human escalation SLA apply to each reconciled field when a second source is later authorized?

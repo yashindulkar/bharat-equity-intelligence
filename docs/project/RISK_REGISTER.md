@@ -20,5 +20,9 @@
 | R-16 | Synthetic evidence-store guarantees are mistaken for production durability | Medium / High | Task 1 atomic create-only writes and hash-verified reads pass; require multiprocess race, directory-fsync fault and production-store review before non-demo use | Data/security |
 | R-17 | Dependency or CI supply-chain controls drift | Medium / High | Task 1 frozen uv lock, clean audit and immutable action pins pass; keep automated audit/secret scan required and review lock changes | Architecture/security |
 | R-18 | Corporate-action support mistaken for production-grade | High / Critical | Prominent limitation; only synthetic split/bonus invariant demo; unsupported/conflicting events block | Data + reviewer |
+| R-19 | Capability marketing is mistaken for contractual evidence | High / Critical | Tri-state registry; unknown fails; clause/sample evidence and reviewer required | Licensing reviewer |
+| R-20 | Licensed raw data leaks through AI, cloud, backup or fixtures | Medium / Critical | Purpose-specific policy gates; default deny; credentials and payloads excluded from Git/logs/AI | Security + owner |
+| R-21 | Provider score overrides a legal/PIT hard gate | Medium / Critical | Score is `None` on any gate failure; adversarial tests | Architecture + validation |
+| R-22 | Source precedence silently destroys conflicting evidence | Medium / Critical | Append competing values; structured conflict; quarantine and human escalation | Data quality |
 
 Critical risks block the applicable release until evidence is attached; “accepted risk” requires a named human and expiry date. Phase 1 Task 1 PASS applies only to its synthetic foundation and does not close the real-data, regulatory or production triggers above.

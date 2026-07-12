@@ -16,3 +16,5 @@ Criticality, freshness and provider agreement are explicit. Missing critical gov
 No licensed payload, credentials, personal portfolio/suitability record, PAN/account/bank identifier, or provider token enters Git, logs, test snapshots or external AI. Unit tests use synthetic records; retained contract fixtures require written permission.
 
 Every pipeline emits a manifest: content hashes, dataset/schema versions, cutoff, counts, rejected records, conflicts, validation results and lineage. Restore/reproduction may require current entitlement and must say so.
+
+Task 2 publication uses `ACCEPTED`, `ACCEPTED_WITH_WARNINGS`, `QUARANTINED`, and `REJECTED`. Policy/contract gates precede raw persistence. When raw retention is forbidden but processing might otherwise be allowed, persistent raw storage is blocked; the pipeline architecture must be configured to avoid retention and prove deletion before any such product is considered.

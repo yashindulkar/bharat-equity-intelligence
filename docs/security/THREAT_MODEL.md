@@ -18,6 +18,10 @@ Phase 1 protects source integrity, provider credentials, code/dependencies, rese
 
 ## Phase 1 security acceptance
 
+### Task 2 provider credential boundary
+
+Provider credentials must come from the macOS Keychain or an equivalently reviewed local secret source, never source files, committed environment values, CLI arguments, manifests, fixtures, licensed-payload directories, logs, exceptions, or external-AI prompts. Use a product-specific least-privilege read-only credential, restrict local access to the operator, redact authorization headers and query secrets before logging, and keep credentials outside raw/staging storage and backups. Record issuer, scope, owner, rotation/expiry dates and revocation procedure without recording the secret. Rotate on schedule or suspected exposure; revoke immediately on termination or incident. A future adapter must add failure-injection tests for redaction and revocation.
+
 No network in unit tests; empty secret placeholders; CI secret scanning; hostile fixtures; bounded parsing; no secrets/personal/licensed data in Git/logs; reason-coded fail-closed output; hashes and reproducible manifests. The custom `.env.example` assertion only verifies selected placeholders are empty—it is not a repository secret scanner. Phase 1 Task 1 uses a frozen uv lock, dependency audit, repository history/directory secret scans and immutable action pins; GitHub Actions run 29210718504 verified these gates. Hash chaining is tamper-evident, not automatically tamper-proof, and the synthetic local store is not a production security boundary.
 
 ## Privacy lifecycle

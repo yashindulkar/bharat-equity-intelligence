@@ -40,6 +40,6 @@ Establish an actionable, reviewable foundation without production behavior. Exit
 
 Private household use; no consideration, publication, third-party access, live broker connectivity, or personal data in Phase 1. These are assumptions, not legal conclusions.
 
-## Exact next task
+## Current task
 
-Phase 1 task 1: obtain human/legal approval for one bounded provider/use case, then write and independently review the security-master/EOD/corporate-action/filing data contracts and bitemporal schemas—plus synthetic adversarial fixtures and failing acceptance tests—before implementing an adapter.
+Phase 1 Task 2 defines and tests the real-data entry gate and provider architecture using synthetic inputs only. It does not approve or implement a provider adapter. Real ingestion remains blocked until one exact provider/product/agreement passes capability, usage-rights, PIT, identity, history, retention, reconciliation and publication gates.
