@@ -11,7 +11,7 @@ REQUIRED = (
     "SECURITY.md",
     ".gitignore",
     ".env.example",
-    ".github/workflows/phase0.yml",
+    ".github/workflows/quality.yml",
     "docs/project/MASTER_PLAN.md",
     "docs/project/DEPENDENCY_GRAPH.md",
     "docs/project/ENVIRONMENT_ASSESSMENT.md",

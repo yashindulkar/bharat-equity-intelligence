@@ -6,9 +6,11 @@
 4. Add tests before financial or risk logic: unit, golden, property, leakage, and contract tests as applicable.
 5. Run `make check`. Do not merge with critical security/data-quality findings, unsupported claims, or unresolved licensed-data use.
 
-Phase 0 quality tools and their Python 3.12 dependencies are pinned in `requirements-dev.txt`: Ruff
-lint, strict mypy, and pytest.
+The Phase 1 development environment uses pinned `uv==0.8.3` from `requirements-dev.txt` as its
+bootstrap and the committed `uv.lock` as its cross-platform dependency authority. It includes Ruff
+lint, strict mypy, pytest, build, dependency-audit and test dependencies.
 Use a 100-character line target, Python 3.12, explicit timezone-aware datetimes, and `Decimal`
-for money. A full application dependency lock remains a Phase 1 task.
+for money. This locked environment supports the current synthetic-only foundation; it is not a
+production environment or approval for real-data use.
 
 Reviews must challenge methodology. Authors cannot be the sole validators of financial calculations, backtests, or critical security findings.
