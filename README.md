@@ -17,7 +17,7 @@ Private, research-only decision support for long-term Indian equity analysis. It
 
 ## Status
 
-Phase 0 governance and architecture only. No data pipeline, ranking, backtest, stock recommendation, or broker order placement exists. See [master plan](docs/project/MASTER_PLAN.md) and [open questions](docs/project/OPEN_QUESTIONS.md).
+Phase 0 governance is merged, and Phase 1 Task 1's synthetic-only core data-contract and point-in-time foundation has a PASS decision with documented limitations. No real-data pipeline, ranking, backtest, stock recommendation, portfolio allocation, UI, ML, or broker order placement exists. This status does not authorize a later phase. See [release checklist](docs/project/RELEASE_CHECKLIST.md), [master plan](docs/project/MASTER_PLAN.md), and [open questions](docs/project/OPEN_QUESTIONS.md).
 
 ## Intended boundaries
 
