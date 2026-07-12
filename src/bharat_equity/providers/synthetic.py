@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -12,6 +13,7 @@ from bharat_equity.domain.models import (
     CorporateActionStatus,
     CorporateActionType,
     EndOfDayPriceBar,
+    ExchangeListing,
     FinancialFiling,
     ValidationStatus,
 )
@@ -72,6 +74,13 @@ class SyntheticProvider:
             "SYNTHETIC-IN",
         ),
     )
+    listing = ExchangeListing(
+        "SYNTHETIC-LISTING-1",
+        "SYNTHETIC-SECURITY-1",
+        "SYNTHETIC-EXCHANGE",
+        T0,
+        effective_at=T0,
+    )
     price = EndOfDayPriceBar(
         **_temporal(),
         listing_id="SYNTHETIC-LISTING-1",
@@ -84,9 +93,10 @@ class SyntheticProvider:
         volume=Decimal("1000"),
     )
     split = CorporateAction(
-        **_temporal(usable_from=T2),
+        **_temporal(effective_at=T2, usable_from=T2),
         action_id="SYNTHETIC-ACTION-SPLIT",
-        security_id="SYNTHETIC-SECURITY-SPLIT",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
         action_type=CorporateActionType.STOCK_SPLIT,
         idempotency_key="SYNTHETIC-SPLIT-1-TO-10",
         status=CorporateActionStatus.CONFIRMED,
@@ -95,9 +105,10 @@ class SyntheticProvider:
         denominator=Decimal("1"),
     )
     bonus = CorporateAction(
-        **_temporal(usable_from=T2),
+        **_temporal(effective_at=T2, usable_from=T2),
         action_id="SYNTHETIC-ACTION-BONUS",
-        security_id="SYNTHETIC-SECURITY-BONUS",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
         action_type=CorporateActionType.BONUS_ISSUE,
         idempotency_key="SYNTHETIC-BONUS-1-FOR-1",
         status=CorporateActionStatus.CONFIRMED,
@@ -105,9 +116,65 @@ class SyntheticProvider:
         numerator=Decimal("1"),
         denominator=Decimal("1"),
     )
+    dividend = CorporateAction(
+        **_temporal(effective_at=T2, usable_from=T2),
+        action_id="SYNTHETIC-ACTION-DIVIDEND",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
+        action_type=CorporateActionType.CASH_DIVIDEND,
+        idempotency_key="SYNTHETIC-DIVIDEND-EVIDENCE",
+        status=CorporateActionStatus.CONFIRMED,
+        source_record_ids=("SYNTHETIC-SOURCE-DIVIDEND",),
+        cash_amount=Decimal("3.25"),
+        currency="SYNTHETIC-INR",
+        ex_date=date(2025, 9, 1),
+        record_date=date(2025, 9, 2),
+        payment_date=date(2025, 9, 9),
+    )
+    symbol_change = CorporateAction(
+        **_temporal(effective_at=T2, usable_from=T2),
+        action_id="SYNTHETIC-ACTION-SYMBOL-CHANGE",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
+        action_type=CorporateActionType.SYMBOL_CHANGE,
+        idempotency_key="SYNTHETIC-SYMBOL-CHANGE-EVIDENCE",
+        status=CorporateActionStatus.CONFIRMED,
+        source_record_ids=("SYNTHETIC-SOURCE-SYMBOL-CHANGE",),
+        old_symbol="SYNTHETIC-OLD-SYMBOL",
+        new_symbol="SYNTHETIC-NEW-SYMBOL",
+    )
+    delisting = CorporateAction(
+        **_temporal(effective_at=T2, usable_from=T2),
+        action_id="SYNTHETIC-ACTION-DELISTING",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
+        action_type=CorporateActionType.DELISTING,
+        idempotency_key="SYNTHETIC-DELISTING-EVIDENCE",
+        status=CorporateActionStatus.CONFIRMED,
+        source_record_ids=("SYNTHETIC-SOURCE-DELISTING",),
+    )
+    conflicting_split = replace(
+        split,
+        action_id="SYNTHETIC-ACTION-SPLIT-CONFLICT",
+        idempotency_key="SYNTHETIC-SPLIT-CONFLICT-EVIDENCE",
+        status=CorporateActionStatus.CONFLICTING,
+        source_record_ids=("SYNTHETIC-SOURCE-SPLIT-CONFLICT",),
+        numerator=Decimal("9"),
+    )
+    unsupported_rights = CorporateAction(
+        **_temporal(effective_at=T2, usable_from=T2),
+        action_id="SYNTHETIC-ACTION-RIGHTS-UNSUPPORTED",
+        security_id="SYNTHETIC-SECURITY-1",
+        listing_id="SYNTHETIC-LISTING-1",
+        action_type=CorporateActionType.RIGHTS_ISSUE,
+        idempotency_key="SYNTHETIC-RIGHTS-UNSUPPORTED-EVIDENCE",
+        status=CorporateActionStatus.CONFIRMED,
+        source_record_ids=("SYNTHETIC-SOURCE-RIGHTS",),
+    )
     original_filing = FinancialFiling(
         **_temporal(usable_from=T1, superseded_at=T2),
         filing_id="SYNTHETIC-FILING-V1",
+        version_chain_id="SYNTHETIC-FILING-CHAIN-2025",
         company_id="SYNTHETIC-COMPLETE-ENTITY",
         period_id="SYNTHETIC-PERIOD-2025",
         filing_kind="SYNTHETIC_ANNUAL",
@@ -116,6 +183,7 @@ class SyntheticProvider:
     restated_filing = FinancialFiling(
         **_temporal(usable_from=T2, revision=2),
         filing_id="SYNTHETIC-FILING-V2",
+        version_chain_id="SYNTHETIC-FILING-CHAIN-2025",
         company_id="SYNTHETIC-COMPLETE-ENTITY",
         period_id="SYNTHETIC-PERIOD-2025",
         filing_kind="SYNTHETIC_ANNUAL_RESTATED",
@@ -144,7 +212,19 @@ class SyntheticProvider:
         return self._result("PRICES", (self.price,))
 
     def fetch_corporate_actions(self) -> ProviderResult:
-        return self._result("ACTIONS", (self.split, self.bonus, self.split))
+        return self._result(
+            "ACTIONS",
+            (
+                self.split,
+                self.bonus,
+                self.dividend,
+                self.symbol_change,
+                self.delisting,
+                self.conflicting_split,
+                self.unsupported_rights,
+                self.split,
+            ),
+        )
 
     def fetch_fundamentals(self) -> ProviderResult:
         return self._result("FUNDAMENTALS", (self.original_filing, self.restated_filing))

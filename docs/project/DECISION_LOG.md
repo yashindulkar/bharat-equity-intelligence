@@ -18,7 +18,9 @@
 | D-014 | Accepted Phase 1 | Architecture | Stable entity -> security -> listing identity with effective-dated attributes | Tickers, ISINs and names are not permanent identity; ADR-0005 |
 | D-015 | Accepted Phase 1 | Architecture | Explicit PIT views and UTC availability gates | Prevent future/restatement leakage; ADR-0006 |
 | D-016 | Accepted Phase 1 | Architecture | Standard-library canonical JSON evidence for Task 1; defer DuckDB/Parquet | Minimum sufficient offline boundary; ADR-0008 |
-| D-017 | Accepted Phase 1 | Tooling | Continue exact pip pins temporarily; uv/hash lock remains release-blocking | `uv` unavailable locally; no unreviewed dependency installed |
+| D-017 | Accepted Phase 1 | Tooling | Use pinned uv 0.8.3 with committed `uv.lock`; bootstrap only from `requirements-dev.txt` | Frozen sync/export provides cross-platform hashes; CI audits the frozen export |
 | D-018 | Accepted Phase 1 | Repository | Branch based on Phase 0 foundation tip because local/remote main lacked merged Phase 0 commits | PR against main may visibly include Phase 0 ancestry until remote alignment is corrected |
+| D-019 | Accepted Phase 1 | Storage | Publish immutable objects via flushed temp file plus exclusive atomic hard link | Standard-library atomic no-overwrite semantics; verified reads detect corruption |
+| D-020 | Accepted Phase 1 | Corporate actions | Multiplicative actions are listing-scoped and ledger identity binds canonical action, source series and method | Prevents cross-security application and duplicate adjustment after restart |
 
 No entry silently amends `MASTER_SPEC.md`; proposed corrections interpret ambiguous phase/release language and require human confirmation where noted.

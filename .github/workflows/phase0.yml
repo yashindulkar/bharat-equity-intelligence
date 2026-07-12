@@ -12,37 +12,47 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dev.txt
-      - name: Install exact Phase 0 quality tools
+      - name: Install pinned uv bootstrap
         run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: Sync locked Phase 1 environment
+        run: uv sync --frozen --extra dev
       - name: Structural checks, format, lint, strict typing and tests
-        run: make check
+        run: uv run --frozen --extra dev make check
       - name: Category checks
-        run: make test-unit test-property test-leakage test-integration test-security
+        run: uv run --frozen --extra dev make test-unit test-property test-leakage test-integration test-security
       - name: Build package
-        run: python -m pip install build==1.2.2.post1 && make build
+        run: uv run --frozen --extra dev python -m build
+      - name: Install wheel and run installed CLI
+        run: |
+          uv venv /tmp/wheel-smoke
+          uv pip install --python /tmp/wheel-smoke/bin/python dist/*.whl
+          /tmp/wheel-smoke/bin/bharat-equity-synthetic --json
 
   dependency-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
-      - run: python -m pip install pip-audit==2.9.0 && python -m pip_audit -r requirements-dev.txt
+      - run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - run: uv sync --frozen --extra dev
+      - run: uv export --frozen --extra dev --no-emit-project --format requirements-txt --output-file /tmp/audit-requirements.txt
+      - run: uv run --frozen --extra dev pip-audit -r /tmp/audit-requirements.txt
 
   secret-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       - name: Scan repository history for secrets
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

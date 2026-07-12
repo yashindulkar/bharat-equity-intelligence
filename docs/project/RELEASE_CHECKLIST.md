@@ -5,12 +5,16 @@
 - [x] Synthetic-only domain, PIT, provider, manifest and CLI foundation exists.
 - [x] Independent identity, PIT, corporate-action and data/security reviews ran (four agents total).
 - [x] Unit/property-style/leakage/integration/security tests run offline.
-- [ ] Cross-record identity validators and complete adversarial fixture inventory pass.
-- [ ] Atomic evidence writes and verified reads pass.
-- [ ] Hash-locked environment, dependency vulnerability scan and immutable CI action pins pass.
-- [ ] Draft PR opened against an aligned `main` (GitHub authentication currently absent).
+- [x] Cross-record identity validators and adversarial corporate-action fixtures pass locally.
+- [x] Atomic create-only evidence writes and hash-verified reads pass locally.
+- [x] Frozen uv lock, local dependency vulnerability scan and immutable CI action pins pass locally.
+- [x] Draft PR #2 targets aligned `main` and remains unmerged.
+- [x] Four remediation re-reviews report no critical finding in their assigned local scopes.
+- [x] Local full suite passes (61 tests); isolated sdist/wheel build, wheel install and installed CLI pass.
+- [x] Local dependency audit and Gitleaks history/directory scans pass.
+- [ ] Updated GitHub Actions run is green after the remediation push.
 
-**Release decision: FAIL.** The implementation is a reviewed foundation, but the unchecked critical items prevent claiming the Task 1 definition of done.
+**Release decision: FAIL pending updated GitHub Actions and final independent re-review.** Local evidence alone does not close remote release gates.
 
 ## Phase 0
 

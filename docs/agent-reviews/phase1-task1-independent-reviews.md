@@ -29,3 +29,14 @@ Four independent specialist subagents ran on 2026-07-11. The environment allowed
 ## Orchestrator disposition
 
 Critical findings were partly addressed, but unresolved items are recorded in the risk register and release checklist. The truthful release decision is **FAIL**; no claim of Task 1 completion or production-grade corporate-action/storage support is made.
+
+## Remediation re-review — 2026-07-12
+
+Four independent read-only workstreams re-inspected the shared working tree after remediation. Reviewers ran focused tests and did not edit files.
+
+- **Temporal/logical chains — PASS:** 35 focused tests passed. Intrinsic keys bind filings/facts to entity, period, scope and metric identity; mixed chains fail; supersession and half-open histories were exercised. Limitation: correction lineage is timestamp-inferred rather than an explicit predecessor graph.
+- **Corporate actions/target identity — PASS:** 23 focused tests passed. Listing/security/bar targeting, t-ε/t/t+ε boundaries, future-action rejection, uniform price basis, source-content idempotency and restart persistence were verified. Limitations: one-action synthetic adjustment only; no production complex-action support.
+- **Storage/idempotency — PASS:** 18 focused tests passed plus manual alias/revision/recovery probes. Atomic no-overwrite publication, verified reads, durable result evidence, ledger recovery and duplicate manifest evidence were verified. Limitations: no multiprocess race or post-link fsync fault injection.
+- **Data quality/CI security — PASS locally, CONDITIONAL remotely:** 61 full tests, frozen uv lock, isolated build, wheel install/CLI, clean pip-audit and Gitleaks history/directory scans were verified locally. GitHub Actions remains the remote evidence gate until the pushed commit completes.
+
+The PR remains draft. **Release decision remains FAIL until the updated GitHub Actions run is green and PR metadata reflects the verified results.**

@@ -18,7 +18,10 @@ def run(cutoff: datetime) -> dict[str, object]:
     provider = SyntheticProvider()
     filings = list(provider.fetch_fundamentals().records)
     selected = select_vintage(
-        filings, business_at=cutoff, cutoff=cutoff, view=VintageView.AS_KNOWN_THEN
+        filings,
+        business_at=cutoff,
+        cutoff=cutoff,
+        view=VintageView.AS_KNOWN_THEN,
     )
     rejected = [item.filing_id for item in filings if item.usable_from > cutoff]
     results = [

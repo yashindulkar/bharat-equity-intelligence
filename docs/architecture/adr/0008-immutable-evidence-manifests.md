@@ -9,4 +9,4 @@ Use standard-library content-addressed JSON files and deterministic manifests fo
 
 ## Consequences
 
-This does not claim tamper-proof storage or licensed retention rights. Atomic writes and verified reads remain an unresolved critical hardening item.
+This does not claim tamper-proof storage or licensed retention rights. Synthetic evidence and adjusted-result records are published from fsynced temporary files with exclusive no-overwrite semantics; verified reads recompute the requested digest and reject corruption. Production durability, remote locking and licensed-data retention remain later decisions.

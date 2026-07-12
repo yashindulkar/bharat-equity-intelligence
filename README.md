@@ -4,6 +4,15 @@ Phase 1 Task 1 provides an offline, synthetic-only foundation for stable identit
 
 Run the demo with `PYTHONPATH=src python -m bharat_equity.cli --json`. All fixture names and identifiers are deliberately impossible and marked `SYNTHETIC`.
 
+Phase 1 development uses pinned `uv==0.8.3` as the bootstrap and committed `uv.lock` as the cross-platform dependency authority:
+
+```text
+python3 -m pip install -r requirements-dev.txt
+uv sync --frozen --extra dev
+uv run --frozen --extra dev make check
+uv run --frozen --extra dev python -m build
+```
+
 Private, research-only decision support for long-term Indian equity analysis. It is not a promise of returns, investment advice, or an order-execution system. Equity investments can lose capital; outputs may be wrong.
 
 ## Status

@@ -49,7 +49,8 @@ master = (ROOT / "MASTER_SPEC.md").read_text()
 assert "Phase 0 — Discovery and governance" in master
 assert "No production code beyond scaffolding" in master
 broken_links: list[tuple[str, str]] = []
-for document in ROOT.rglob("*.md"):
+documents = [*ROOT.glob("*.md"), *(ROOT / "docs").rglob("*.md")]
+for document in documents:
     for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", document.read_text()):
         if target.startswith(("http://", "https://", "#")):
             continue

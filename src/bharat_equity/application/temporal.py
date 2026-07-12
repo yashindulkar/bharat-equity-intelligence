@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Hashable, Sequence
 from datetime import datetime
 from enum import StrEnum
 from typing import TypeVar
 
-from bharat_equity.domain.models import TemporalRecord, require_utc
+from bharat_equity.domain.errors import DomainError, ReasonCode
+from bharat_equity.domain.models import (
+    ClassificationHistory,
+    FinancialFact,
+    FinancialFiling,
+    IdentifierHistory,
+    IndexMembershipHistory,
+    ISINHistory,
+    SymbolHistory,
+    TemporalRecord,
+    require_utc,
+)
 
 T = TypeVar("T", bound=TemporalRecord)
 
@@ -23,11 +35,52 @@ def is_effective(record: TemporalRecord, business_at: datetime) -> bool:
     )
 
 
+def logical_version_key(record: TemporalRecord) -> Hashable:
+    if isinstance(record, FinancialFiling):
+        return ("filing", record.version_chain_id, record.company_id, record.period_id)
+    if isinstance(record, FinancialFact):
+        return (
+            "fact",
+            record.version_chain_id,
+            record.company_id,
+            record.period_id,
+            record.reporting_scope,
+            record.metric,
+            record.unit,
+            record.currency,
+        )
+    if isinstance(record, SymbolHistory):
+        return ("symbol", record.listing_id)
+    if isinstance(record, ISINHistory):
+        return ("isin", record.security_id)
+    if isinstance(record, IdentifierHistory):
+        return ("identifier", record.security_id, record.identifier_type, record.issuer)
+    if isinstance(record, ClassificationHistory):
+        return ("classification", record.company_id, record.taxonomy)
+    if isinstance(record, IndexMembershipHistory):
+        return ("membership", record.security_id, record.index_id)
+    raise DomainError(
+        ReasonCode.IDENTITY_CONFLICT,
+        f"{type(record).__name__} has no intrinsic logical version key",
+    )
+
+
 def select_vintage(
-    records: list[T], *, business_at: datetime, cutoff: datetime, view: VintageView
+    records: Sequence[T],
+    *,
+    business_at: datetime,
+    cutoff: datetime,
+    view: VintageView,
 ) -> T | None:
     """Select an admissible record deterministically; cutoffs are never implicit."""
     require_utc(cutoff, "cutoff")
+    if records:
+        keys = {logical_version_key(record) for record in records}
+        if len(keys) != 1:
+            raise DomainError(
+                ReasonCode.IDENTITY_CONFLICT,
+                "vintage candidates must belong to one logical version chain",
+            )
     candidates = [r for r in records if is_effective(r, business_at) and r.usable_from <= cutoff]
     if view is VintageView.AS_KNOWN_THEN:
         candidates = [r for r in candidates if r.superseded_at is None or cutoff < r.superseded_at]
