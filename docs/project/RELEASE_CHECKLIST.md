@@ -1,5 +1,22 @@
 # Release Checklist
 
+## Phase 1 Task 1 evidence (2026-07-11)
+
+- [x] Synthetic-only domain, PIT, provider, manifest and CLI foundation exists.
+- [x] Independent identity, PIT, corporate-action and data/security reviews ran (four agents total).
+- [x] Unit/property-style/leakage/integration/security tests run offline.
+- [x] Cross-record identity validators and adversarial corporate-action fixtures pass locally.
+- [x] Atomic create-only evidence writes and hash-verified reads pass locally.
+- [x] Frozen uv lock, local dependency vulnerability scan and immutable CI action pins pass locally.
+- [x] Draft PR #2 targets aligned `main` and remains unmerged.
+- [x] Four remediation re-reviews report no critical finding in their assigned local scopes.
+- [x] Local full suite passes (61 tests); isolated sdist/wheel build, wheel install and installed CLI pass.
+- [x] Local dependency audit and Gitleaks history/directory scans pass.
+- [x] GitHub Actions run 29210718504 is green: quality, dependency-audit and secret-scan succeeded.
+- [x] Draft PR #2 title, description, review evidence and explicit release decision are complete.
+
+**Release decision: PASS for the Phase 1 Task 1 synthetic foundation, with documented limitations.** This decision does not establish production, licensed-real-data, recommendation, backtest or later-phase readiness. Complex corporate actions, multi-action adjustment economics, multiprocess storage fault injection and explicit correction predecessor graphs remain outside this Task 1 foundation.
+
 ## Phase 0
 
 - [x] `MASTER_SPEC.md` read fully and preserved as authority
@@ -14,7 +31,7 @@
 - [ ] Independent human/legal review of regulatory and licensing conclusions
 
 The Phase 0 custom placeholder assertion is not a secret scanner. CI runs Gitleaks separately.
-Dependency-vulnerability scanning and a hashed cross-platform lock are Phase 1 release-blocking tasks.
+Phase 1 Task 1 now has a frozen cross-platform uv lock, dependency-vulnerability scanning and immutable CI action pins. These controls must remain green for later changes.
 
 ## Every later phase
 
@@ -23,6 +40,6 @@ Dependency-vulnerability scanning and a hashed cross-platform lock are Phase 1 r
 - [ ] Lineage and known limitations are complete
 - [ ] Independent reviewer signs off; no author self-validates critical work
 - [ ] No unsupported performance or compliance claim appears
-- [ ] Release decision and evidence are recorded
+- [ ] Each later phase records its own release decision and evidence; Phase 1 Task 1 evidence does not satisfy later gates
 
 **Phase 0 decision: CONDITIONAL PASS.** Conditions are the unchecked human/legal items; Phase 1 real-data work is blocked until its data entry gate passes.

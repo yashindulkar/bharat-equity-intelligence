@@ -1,23 +1,36 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools==75.8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bharat-equity-intelligence"
-version = "0.0.0"
-description = "Phase 0 scaffold for private Indian-equity research decision support"
+version = "0.1.0"
+description = "Synthetic-only point-in-time domain foundation for private equity research"
 requires-python = ">=3.12"
 
 [project.optional-dependencies]
 dev = [
+    "build==1.2.2.post1",
+    "hypothesis==6.135.20",
     "mypy==1.15.0",
-    "pytest==8.3.5",
+    "pip-audit==2.9.0",
+    "pytest==9.0.3",
     "ruff==0.11.0",
 ]
+
+[project.scripts]
+bharat-equity-synthetic = "bharat_equity.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "unit: isolated domain tests",
+    "property: invariant tests",
+    "leakage: point-in-time adversarial tests",
+    "integration: offline boundary tests",
+    "security: offline and fixture safety tests",
+]
 
 [tool.mypy]
 python_version = "3.12"

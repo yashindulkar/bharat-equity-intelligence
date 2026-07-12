@@ -1,6 +1,6 @@
 # ADR-0004: Provider ports and simple orchestration
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-11
 
 ## Decision

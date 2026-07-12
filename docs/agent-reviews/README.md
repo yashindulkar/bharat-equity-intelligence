@@ -7,3 +7,5 @@ Therefore the six records below are separate topical reviews, but not six indepe
 
 No subagent edited repository files. The lead synthesized the findings and is responsible for any
 errors introduced during synthesis.
+
+Phase 1 Task 1 reviews are recorded in `phase1-task1-independent-reviews.md`.

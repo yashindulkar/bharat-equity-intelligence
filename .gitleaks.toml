@@ -1,0 +1,11 @@
+title = "Bharat Equity Intelligence secret-scan policy"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known impossible synthetic corporate-action idempotency fixtures"
+regexes = [
+  '''^SYNTHETIC-SPLIT-1-TO-10$''',
+  '''^SYNTHETIC-BONUS-1-FOR-1$''',
+]

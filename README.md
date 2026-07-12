@@ -1,10 +1,23 @@
 # Bharat Long-Term Equity Intelligence
 
+Phase 1 Task 1 provides an offline, synthetic-only foundation for stable identity, point-in-time records, selected corporate-action invariants, deterministic manifests, typed abstention and narrow provider ports. It contains no real market ingestion, recommendation, backtest, allocation, UI, ML, broker operation or profitability claim.
+
+Run the demo with `PYTHONPATH=src python -m bharat_equity.cli --json`. All fixture names and identifiers are deliberately impossible and marked `SYNTHETIC`.
+
+Phase 1 development uses pinned `uv==0.8.3` as the bootstrap and committed `uv.lock` as the cross-platform dependency authority:
+
+```text
+python3 -m pip install -r requirements-dev.txt
+uv sync --frozen --extra dev
+uv run --frozen --extra dev make check
+uv run --frozen --extra dev python -m build
+```
+
 Private, research-only decision support for long-term Indian equity analysis. It is not a promise of returns, investment advice, or an order-execution system. Equity investments can lose capital; outputs may be wrong.
 
 ## Status
 
-Phase 0 governance and architecture only. No data pipeline, ranking, backtest, stock recommendation, or broker order placement exists. See [master plan](docs/project/MASTER_PLAN.md) and [open questions](docs/project/OPEN_QUESTIONS.md).
+Phase 0 governance is merged, and Phase 1 Task 1's synthetic-only core data-contract and point-in-time foundation has a PASS decision with documented limitations. No real-data pipeline, ranking, backtest, stock recommendation, portfolio allocation, UI, ML, or broker order placement exists. This status does not authorize a later phase. See [release checklist](docs/project/RELEASE_CHECKLIST.md), [master plan](docs/project/MASTER_PLAN.md), and [open questions](docs/project/OPEN_QUESTIONS.md).
 
 ## Intended boundaries
 
