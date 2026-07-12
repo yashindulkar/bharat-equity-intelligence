@@ -8,12 +8,12 @@
 - [x] Cross-record identity validators and adversarial corporate-action fixtures pass locally.
 - [x] Atomic create-only evidence writes and hash-verified reads pass locally.
 - [x] Frozen uv lock, local dependency vulnerability scan and immutable CI action pins pass locally.
-- [x] Draft PR #2 targets aligned `main` and remains unmerged.
+- [x] **Verified (2026-07-13):** PR #2 passed review and CI and was squash-merged into `main` as commit `9a0c68a`.
 - [x] Four remediation re-reviews report no critical finding in their assigned local scopes.
 - [x] Local full suite passes (61 tests); isolated sdist/wheel build, wheel install and installed CLI pass.
 - [x] Local dependency audit and Gitleaks history/directory scans pass.
 - [x] GitHub Actions run 29210718504 is green: quality, dependency-audit and secret-scan succeeded.
-- [x] Draft PR #2 title, description, review evidence and explicit release decision are complete.
+- [x] PR #2 title, description, review evidence and explicit release decision are complete.
 
 **Release decision: PASS for the Phase 1 Task 1 synthetic foundation, with documented limitations.** This decision does not establish production, licensed-real-data, recommendation, backtest or later-phase readiness. Complex corporate actions, multi-action adjustment economics, multiprocess storage fault injection and explicit correction predecessor graphs remain outside this Task 1 foundation.
 

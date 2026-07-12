@@ -31,16 +31,19 @@ Phase 0 governance is merged, and Phase 1 Task 1's synthetic-only core data-cont
 
 ## Development
 
-Use Python 3.12. Install the exact Phase 0 quality-tool versions in an isolated environment:
+Use Python 3.12. The current Phase 1 development environment uses pinned `uv==0.8.3` as the
+bootstrap and the committed `uv.lock` as the locked dependency environment. To keep an isolated
+bootstrap while preserving the existing uv-based workflow:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
-PATH="$PWD/.venv/bin:$PATH" make check
+PATH="$PWD/.venv/bin:$PATH" uv sync --frozen --extra dev
+PATH="$PWD/.venv/bin:$PATH" uv run --frozen --extra dev make check
 ```
 
 `make check` runs the repository structural/link checks, Python compilation, Ruff linting, strict
-mypy typing, and pytest. Environment observations from Phase 0 are recorded in the
+mypy typing, and pytest. Historical environment observations from Phase 0 are recorded in the
 [environment assessment](docs/project/ENVIRONMENT_ASSESSMENT.md), not treated as permanent prerequisites.
 
 ## Authority and safety
