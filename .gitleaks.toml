@@ -3,10 +3,8 @@ title = "Bharat Equity Intelligence secret-scan policy"
 [extend]
 useDefault = true
 
-[[allowlists]]
+[allowlist]
 description = "Known impossible synthetic corporate-action idempotency fixtures"
-targetRules = ["generic-api-key"]
-regexTarget = "secret"
 regexes = [
   '''^SYNTHETIC-SPLIT-1-TO-10$''',
   '''^SYNTHETIC-BONUS-1-FOR-1$''',
