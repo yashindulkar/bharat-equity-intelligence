@@ -24,5 +24,10 @@
 | R-20 | Licensed raw data leaks through AI, cloud, backup or fixtures | Medium / Critical | Purpose-specific policy gates; default deny; credentials and payloads excluded from Git/logs/AI | Security + owner |
 | R-21 | Provider score overrides a legal/PIT hard gate | Medium / Critical | Score is `None` on any gate failure; adversarial tests | Architecture + validation |
 | R-22 | Source precedence silently destroys conflicting evidence | Medium / Critical | Append competing values; structured conflict; quarantine and human escalation | Data quality |
+| R-23 | Contract termination leaves prohibited raw/backup/fixture copies | Medium / Critical | Typed deletion deadline and per-category state; overdue prohibited retention hard-blocks; verification evidence required | Owner + licensing/security |
+| R-24 | Wall-clock time is mistaken for latest completed EOD session | High / Critical | Caller supplies explicit latest required session; production market-calendar resolution deferred and separately reviewed | Data platform + PIT reviewer |
+| R-25 | Broad or irrelevant provider history gaps block valid use, or relevant gaps pass | Medium / Critical | Typed domain/venue/scope intervals; only intersecting open critical gaps block; property tests | Data quality |
+| R-26 | Provider envelope is replayed or rebound to another product/policy/purpose | Medium / Critical | Exact binding, allowed-schema gate, agreement dates, and payload-byte SHA-256 verification | Security + provider architecture |
+| R-27 | Subjective provider score lacks evidence or masks a hard failure | Medium / High | Exact versioned dimensions, evidence/assessor/method/confidence, weights=1, score only after hard gates | Architecture + independent reviewer |
 
 Critical risks block the applicable release until evidence is attached; “accepted risk” requires a named human and expiry date. Phase 1 Task 1 PASS applies only to its synthetic foundation and does not close the real-data, regulatory or production triggers above.

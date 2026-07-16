@@ -31,5 +31,12 @@
 | D-027 | Accepted Task 2 | Reconciliation | Field-specific precedence never overwrites competing evidence; critical unresolved conflicts quarantine | BSE reconciliation remains deferred |
 | D-028 | Open question | Human/legal | Retention, backup/cloud, hosting country, viewers, budget, provider/product, benchmark and agreement rights | No approval inferred; real ingestion remains blocked |
 | D-029 | Verified Task 2 | Independent review | Five independent specialist agents reviewed market architecture, PIT/history, licensing, data quality and security; all critical/high findings were remediated and final re-reviews passed | Read-only record in `docs/agent-reviews/phase1-task2-independent-reviews.md`; not provider approval |
+| D-030 | Accepted Task 2 remediation | Lifecycle | Replace termination/deletion booleans with contract-specific per-category states and deadlines; new entry always stops at termination | Permitted derived/audit evidence retention is disposition only, not retrieval authority |
+| D-031 | Accepted Task 2 remediation | PIT/EOD | Compare provider coverage with explicit `latest_required_session`, not evaluation time | Intraday/weekend/holiday evaluation is independent of completed-session coverage; calendar adapter deferred |
+| D-032 | Accepted Task 2 remediation | Data quality | History gaps are typed and only intersecting open critical gaps block | Avoid both blanket denial and silent relevant gaps |
+| D-033 | Accepted Task 2 remediation | Evidence | Provider envelopes bind provider/product/version/policy/purpose/schema and verify actual payload bytes | Syntax-only digest validation was insufficient |
+| D-034 | Accepted Task 2 remediation | Reconciliation | Typed conflict severity/resolution/confidence/correction drives publication transition | Conflict existence alone no longer implies quarantine |
+| D-035 | Accepted Task 2 remediation | Scorecard | Provider scoring uses versioned evidence-bound entries and exact research-default weights | Score remains unavailable on any hard-gate failure and is not provider approval |
+| D-036 | Accepted Task 2 remediation | Schema | Breaking provider-policy contracts advance to semantic schema `2.0.0`; deterministic report schema is `1.1.0` | Follows ADR-0007 rather than silently changing persisted contract meaning |
 
 No entry silently amends `MASTER_SPEC.md`; proposed corrections interpret ambiguous phase/release language and require human confirmation where noted.

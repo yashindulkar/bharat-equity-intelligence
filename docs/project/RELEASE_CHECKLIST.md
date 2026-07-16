@@ -1,5 +1,22 @@
 # Release Checklist
 
+## Phase 1 Task 2 remediation evidence (2026-07-16)
+
+- [x] Scope remains provider-entry architecture and synthetic evaluation only.
+- [x] Typed termination/deletion lifecycle replaces boolean completion state.
+- [x] EOD coverage uses explicit latest required completed session; calendar adapter is deferred.
+- [x] Typed history gaps block only relevant open critical intersections.
+- [x] Provider envelope binds provider/product/version/policy/purpose/schema and verifies payload bytes.
+- [x] Reconciliation types/invariants and policy-driven publication transitions are tested.
+- [x] Data-usage policy invalid states fail at construction.
+- [x] Evidence-bound, versioned scorecard replaces raw score dictionaries.
+- [x] Direct Python socket denial is accurately documented; subprocess network isolation is not claimed.
+- [x] Historical five-agent review records state scope, files, commands, findings, remediation, limitations, and decision.
+- [x] **Verified 2026-07-16:** structure/link, compilation, Ruff format/lint, strict mypy, full tests (99), property tests (17), git diff validation, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit, and Gitleaks passed locally.
+- [ ] Draft PR #4 CI run and all job conclusions recorded after push.
+
+**Current release decision: CONDITIONAL PASS pending the remediation commit's GitHub Actions result.** The decision applies only to the provider-entry architecture and synthetic evaluation harness. Zero providers and zero real datasets are approved.
+
 ## Phase 1 Task 1 evidence (2026-07-11)
 
 - [x] Synthetic-only domain, PIT, provider, manifest and CLI foundation exists.

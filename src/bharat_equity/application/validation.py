@@ -41,6 +41,9 @@ REASON_CLASSIFICATION: dict[ReasonCode, ReasonSeverity] = {
     ReasonCode.REVISION_HANDLING_UNKNOWN: ReasonSeverity.HARD_BLOCK,
     ReasonCode.DELISTED_COVERAGE_MISSING: ReasonSeverity.HARD_BLOCK,
     ReasonCode.PROVIDER_NOT_APPROVED: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.TERMINATION_DELETION_OVERDUE: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.ENVELOPE_MISMATCH: ReasonSeverity.HARD_BLOCK,
+    ReasonCode.SCHEMA_NOT_ALLOWED: ReasonSeverity.HARD_BLOCK,
 }
 
 

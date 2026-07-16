@@ -38,4 +38,4 @@ Every job is idempotent, creates a quality/lineage report and fails closed on ma
 
 ## Security boundaries
 
-Provider payloads and filings are hostile input. Unit tests have no network. Secrets and licensed/personal records stay outside Git. Personal records and external AI are prohibited until explicit privacy architecture approval.
+Provider payloads and filings are hostile input. The pytest harness denies direct Python socket APIs; it does not claim subprocess-level network sandboxing. Secrets and licensed/personal records stay outside Git. Personal records and external AI are prohibited until explicit privacy architecture approval.

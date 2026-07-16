@@ -1,5 +1,11 @@
 # Reconciliation policy
 
-Normalize neither units nor identities until source semantics are retained in staging. Compare like field, security/listing, session/period, scope, currency, unit, basis, and vintage. Preserve all values and evidence; produce a conflict object with tolerance rule, difference, confidence, and resolution status. No last-write-wins behavior is permitted.
+**Proposal.** Normalize neither units nor identities until source semantics are retained in staging. Compare like field, security/listing, session/period, scope, currency, unit, basis, and vintage. Exact-match and numeric-tolerance rules must be field-specific and versioned. BSE reconciliation remains deferred.
 
-Exact-match fields include stable identifiers, dates, status and action ratios unless a documented semantic rule says otherwise. Numeric tolerances must be field-specific, versioned, and justified. Critical unresolved conflicts quarantine. Human review records reviewer, evidence, decision, effective time, and whether correction/republication is required. BSE reconciliation is deferred and must not be implied.
+**Verified — implementation, 2026-07-16.** A conflict preserves at least two distinct competing text values with unique source-record IDs, semantic basis, versioned evidence, and typed confidence. The conflict also records field, severity, tolerance rule/version, measured difference, typed resolution status, and an explicit correction/republication requirement.
+
+- `UNRESOLVED` cannot carry completed-review evidence and must name a remediation action.
+- `RESOLVED_APPROVED` requires reviewer evidence and UTC `reviewed_at`.
+- `INVALID_NON_REMEDIABLE` requires reviewer evidence and UTC `reviewed_at`, and cannot claim a correction/republication path.
+
+Publication behavior is policy-driven: unresolved critical → `QUARANTINED`; invalid/non-remediable → `REJECTED`; resolved approved → `ACCEPTED_WITH_WARNINGS`; unresolved warning → `ACCEPTED_WITH_WARNINGS`. No last-write-wins behavior is permitted.
