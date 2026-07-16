@@ -38,5 +38,6 @@
 | D-034 | Accepted Task 2 remediation | Reconciliation | Typed conflict severity/resolution/confidence/correction drives publication transition | Conflict existence alone no longer implies quarantine |
 | D-035 | Accepted Task 2 remediation | Scorecard | Provider scoring uses versioned evidence-bound entries and exact research-default weights | Score remains unavailable on any hard-gate failure and is not provider approval |
 | D-036 | Accepted Task 2 remediation | Schema | Breaking provider-policy contracts advance to semantic schema `2.0.0`; deterministic report schema is `1.1.0` | Follows ADR-0007 rather than silently changing persisted contract meaning |
+| D-037 | Verified Task 2 remediation | Release | PASS provider-entry architecture and synthetic harness at commit `5935099`; 99 local tests and workflow run 29506071717 passed | All three CI jobs succeeded; PR #4 remains draft/unmerged; no provider, real data, ranking, backtest or recommendation is approved |
 
 No entry silently amends `MASTER_SPEC.md`; proposed corrections interpret ambiguous phase/release language and require human confirmation where noted.

@@ -13,9 +13,9 @@
 - [x] Direct Python socket denial is accurately documented; subprocess network isolation is not claimed.
 - [x] Historical five-agent review records state scope, files, commands, findings, remediation, limitations, and decision.
 - [x] **Verified 2026-07-16:** structure/link, compilation, Ruff format/lint, strict mypy, full tests (99), property tests (17), git diff validation, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit, and Gitleaks passed locally.
-- [ ] Draft PR #4 CI run and all job conclusions recorded after push.
+- [x] **Verified 2026-07-16:** draft PR #4 workflow run [29506071717](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29506071717) completed successfully for remediation commit `5935099`; jobs `quality`, `dependency-audit`, and `secret-scan` all concluded `success`.
 
-**Current release decision: CONDITIONAL PASS pending the remediation commit's GitHub Actions result.** The decision applies only to the provider-entry architecture and synthetic evaluation harness. Zero providers and zero real datasets are approved.
+**Release decision: PASS only for the provider-entry architecture and synthetic evaluation harness.** Zero providers, zero real datasets, zero rankings, zero backtests, and zero recommendations are approved. Production adapters, provider/calendar integrations, and real-data operation remain blocked.
 
 ## Phase 1 Task 1 evidence (2026-07-11)
 
