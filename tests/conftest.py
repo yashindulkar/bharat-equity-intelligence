@@ -9,7 +9,11 @@ settings.load_profile("ci")
 
 @pytest.fixture(autouse=True)
 def _deny_network(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fail every test immediately if it attempts a network connection."""
+    """Deny common direct Python socket connection and datagram APIs.
+
+    This does not provide subprocess, native-extension, container, or operating-system-level
+    network isolation.
+    """
 
     def deny(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("network access is forbidden in tests")

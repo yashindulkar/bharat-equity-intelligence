@@ -1,3 +1,4 @@
+import hashlib
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -7,12 +8,15 @@ import pytest
 from bharat_equity.application.provider_evaluation import (
     DEFAULT_SCORECARD_VERSION,
     DEFAULT_WEIGHTS,
+    EVALUATION_ARTIFACT_SCHEMA_VERSION,
     REPORT_SCHEMA_VERSION,
+    EvaluationArtifact,
     EvaluationRequest,
-    GateResult,
     deterministic_report,
     evaluate_hard_gates,
+    history_gap_relevant,
     publication_gate,
+    validate_evaluation_artifact,
     validate_provider_envelope,
 )
 from bharat_equity.domain.errors import ReasonCode
@@ -24,29 +28,45 @@ from bharat_equity.domain.provider_policy import (
     ConfidenceLevel,
     ConflictResolutionStatus,
     CorrectionRequirement,
+    DataCategory,
     DataDomain,
     DataUsagePolicy,
-    DeletionState,
+    DeletionDisposition,
+    DeletionEvidenceReference,
+    DispositionState,
     EvidenceReference,
     GapResolutionStatus,
     GapSeverity,
+    GeographyScope,
     HistoryGap,
+    MembershipState,
     Permission,
+    ProcessingGeographyGrant,
     ProviderCapabilityRegistry,
     ProviderResponseEnvelope,
     ProviderScorecard,
     PublicationStatus,
     ReconciliationConflict,
+    RemediationAction,
+    RemediationExecution,
+    RemediationStatus,
     ScorecardEntry,
     ScoreDimension,
     TerminationDeletionLifecycle,
+    TerminationLifecycleRegistry,
+    UniverseMembershipEvidence,
     UsagePurpose,
+    contract_snapshot_id,
 )
 
 NOW = datetime(2026, 7, 13, 12, tzinfo=UTC)
 HISTORY_START = datetime(2020, 1, 1, tzinfo=UTC)
 LATEST_SESSION = datetime(2026, 7, 10, 10, tzinfo=UTC)
-EVIDENCE = EvidenceReference("SYNTHETIC-EVIDENCE", "SYNTHETIC-1")
+EVIDENCE = EvidenceReference(
+    "SYNTHETIC-EVIDENCE",
+    "SYNTHETIC-1",
+    NOW - timedelta(days=30),
+)
 
 
 def capabilities(
@@ -71,6 +91,7 @@ def capabilities(
                 EvidenceReference(
                     f"SYNTHETIC-EVIDENCE-{name}",
                     "SYNTHETIC-1",
+                    NOW - timedelta(days=30),
                 ),
             )
             for name in CAPABILITY_NAMES
@@ -83,20 +104,26 @@ def policy(
     purpose: Permission = Permission.PERMITTED,
     raw: Permission = Permission.PERMITTED,
     approval: ApprovalStatus = ApprovalStatus.APPROVED,
-    until: datetime | None = None,
+    termination_at: datetime | None = None,
+    geography: ProcessingGeographyGrant | None = None,
+    restrictions: tuple[str, ...] = ("SYNTHETIC-FORBIDDEN-JURISDICTION",),
 ) -> DataUsagePolicy:
+    ends_at = termination_at or NOW + timedelta(days=120)
     purposes = {item: Permission.PROHIBITED for item in UsagePurpose}
     purposes[UsagePurpose.PRIVATE_HOUSEHOLD_RESEARCH] = purpose
     approved_at = NOW - timedelta(days=20) if approval is ApprovalStatus.APPROVED else None
     rejected_at = NOW - timedelta(days=1) if approval is ApprovalStatus.REJECTED else None
-    review_due = NOW + timedelta(days=120) if approval is ApprovalStatus.APPROVED else None
+    review_due = NOW + timedelta(days=90) if approval is ApprovalStatus.APPROVED else None
     return DataUsagePolicy(
         policy_id="SYNTHETIC-POLICY",
         provider_id="SYNTHETIC-PROVIDER",
         product="SYNTHETIC-PRODUCT",
-        agreement_version="SYNTHETIC-1",
+        agreement_version="SYNTHETIC-AGREEMENT-1",
         effective_from=NOW - timedelta(days=30),
-        effective_until=until or NOW + timedelta(days=120),
+        effective_until=ends_at,
+        termination_event_id="SYNTHETIC-TERMINATION-1",
+        termination_at=ends_at,
+        early_termination_amendment=None,
         permitted_users=("SYNTHETIC-OPERATOR",),
         permitted_purposes=purposes,
         raw_retention=raw,
@@ -113,8 +140,13 @@ def policy(
         post_termination_derived_data=Permission.PERMITTED,
         post_termination_audit_evidence=Permission.PERMITTED,
         deletion_obligations="SYNTHETIC deletion required",
-        permitted_processing_geographies=("SYNTHETIC-JURISDICTION",),
-        geographical_restrictions=("SYNTHETIC-FORBIDDEN-JURISDICTION",),
+        processing_geography=geography
+        or ProcessingGeographyGrant(
+            GeographyScope.JURISDICTIONS,
+            ("SYNTHETIC-JURISDICTION",),
+            (EVIDENCE,),
+        ),
+        geographical_restrictions=restrictions,
         evidence_references=(EVIDENCE,),
         reviewer="SYNTHETIC-REVIEWER",
         approved_at=approved_at,
@@ -140,24 +172,38 @@ def request(**changes: object) -> EvaluationRequest:
 
 
 def scorecard(
+    governing_policy: DataUsagePolicy,
     *,
     raw_score: Decimal = Decimal("80"),
     weights: dict[ScoreDimension, Decimal] | None = None,
+    assessed_at: datetime = NOW,
+    evidence_available_at: datetime | None = None,
 ) -> ProviderScorecard:
-    selected = weights or DEFAULT_WEIGHTS
+    selected = weights or dict(DEFAULT_WEIGHTS)
+    score_evidence = EvidenceReference(
+        "SYNTHETIC-SCORE-EVIDENCE",
+        "SYNTHETIC-SCORE-EVIDENCE-1",
+        evidence_available_at or NOW - timedelta(days=1),
+    )
     return ProviderScorecard(
         provider_id="SYNTHETIC-PROVIDER",
         product="SYNTHETIC-PRODUCT",
         product_version="SYNTHETIC-1",
+        policy_id=governing_policy.policy_id,
+        agreement_version=governing_policy.agreement_version,
+        policy_snapshot_id=contract_snapshot_id(governing_policy),
         scorecard_version=DEFAULT_SCORECARD_VERSION,
+        methodology_version="SYNTHETIC-METHOD-1",
+        assessed_at=assessed_at,
+        evidence_references=(score_evidence,),
         entries=tuple(
             ScorecardEntry(
                 dimension=dimension,
                 raw_score=raw_score,
                 weight=selected[dimension],
-                evidence_references=(EVIDENCE,),
+                evidence_references=(score_evidence,),
                 assessor="SYNTHETIC-ASSESSOR",
-                assessed_at=NOW,
+                assessed_at=assessed_at,
                 method_version="SYNTHETIC-METHOD-1",
                 explanation=f"SYNTHETIC explanation for {dimension.value}",
                 confidence=ConfidenceLevel.MEDIUM,
@@ -167,29 +213,90 @@ def scorecard(
     )
 
 
-def lifecycle(
-    *,
-    at: datetime,
+def disposition(
+    category: DataCategory,
+    permission: Permission,
+    state: DispositionState,
     deadline: datetime,
-    raw: DeletionState,
-    backup: DeletionState,
-    fixture: DeletionState,
-    derived: DeletionState = DeletionState.NOT_DUE,
-    audit: DeletionState = DeletionState.NOT_DUE,
+) -> DeletionDisposition:
+    completed = state is DispositionState.COMPLETED
+    retained = state is DispositionState.RETAINED
+    evidence = (
+        (
+            DeletionEvidenceReference(
+                category,
+                EvidenceReference(
+                    f"SYNTHETIC-{category.value}-EVIDENCE",
+                    "SYNTHETIC-1",
+                    NOW - timedelta(hours=1),
+                ),
+            ),
+        )
+        if completed or retained
+        else ()
+    )
+    return DeletionDisposition(
+        category=category,
+        contractual_permission=permission,
+        state=state,
+        applicable_deadline=deadline,
+        completion_at=NOW if completed else None,
+        evidence_references=evidence,
+        verifier=f"SYNTHETIC-{category.value}-VERIFIER" if completed or retained else None,
+        record_version="SYNTHETIC-DISPOSITION-1",
+    )
+
+
+def lifecycle(
+    governing_policy: DataUsagePolicy,
+    *,
+    deadline: datetime,
+    prohibited_state: DispositionState = DispositionState.COMPLETED,
 ) -> TerminationDeletionLifecycle:
-    statuses = (raw, backup, fixture, derived, audit)
-    evidence = (EVIDENCE,) if DeletionState.COMPLETED in statuses else ()
+    assert governing_policy.termination_at is not None
+    assert governing_policy.termination_event_id is not None
+    permissions = {
+        DataCategory.RAW_DATA: governing_policy.post_termination_raw_data,
+        DataCategory.BACKUPS: governing_policy.post_termination_backup,
+        DataCategory.TEST_FIXTURES: governing_policy.post_termination_fixtures,
+        DataCategory.DERIVED_DATA: governing_policy.post_termination_derived_data,
+        DataCategory.AUDIT_EVIDENCE: governing_policy.post_termination_audit_evidence,
+    }
     return TerminationDeletionLifecycle(
-        termination_at=at,
-        deletion_deadline=deadline,
-        raw_data_status=raw,
-        backup_status=backup,
-        fixture_status=fixture,
-        derived_data_retention_permission=Permission.PERMITTED,
-        derived_data_status=derived,
-        audit_evidence_retention_permission=Permission.PERMITTED,
-        audit_evidence_status=audit,
-        deletion_verification_evidence=evidence,
+        lifecycle_id="SYNTHETIC-LIFECYCLE-1",
+        provider_id=governing_policy.provider_id,
+        product=governing_policy.product,
+        policy_id=governing_policy.policy_id,
+        agreement_version=governing_policy.agreement_version,
+        termination_event_id=governing_policy.termination_event_id,
+        termination_at=governing_policy.termination_at,
+        dispositions=tuple(
+            disposition(
+                category,
+                permission,
+                DispositionState.RETAINED
+                if permission is Permission.PERMITTED
+                else prohibited_state,
+                deadline,
+            )
+            for category, permission in permissions.items()
+        ),
+        record_version="SYNTHETIC-LIFECYCLE-RECORD-1",
+    )
+
+
+def registry(*records: TerminationDeletionLifecycle) -> TerminationLifecycleRegistry:
+    return TerminationLifecycleRegistry("SYNTHETIC-LIFECYCLE-REGISTRY-1", records)
+
+
+def execution(action: RemediationAction, status: RemediationStatus) -> RemediationExecution:
+    completed = status is RemediationStatus.COMPLETED
+    return RemediationExecution(
+        action,
+        status,
+        NOW if completed else None,
+        (EVIDENCE,) if completed else (),
+        "SYNTHETIC-REMEDIATION-VERIFIER" if completed else None,
     )
 
 
@@ -197,12 +304,20 @@ def conflict(
     status: ConflictResolutionStatus,
     *,
     severity: GapSeverity = GapSeverity.CRITICAL,
+    requirement: CorrectionRequirement = CorrectionRequirement.CORRECTION_REQUIRED,
+    correction_status: RemediationStatus = RemediationStatus.PENDING,
+    republication_status: RemediationStatus = RemediationStatus.NOT_REQUIRED,
+    conflict_id: str | None = None,
 ) -> ReconciliationConflict:
     reviewed = status is not ConflictResolutionStatus.UNRESOLVED
+    if status is ConflictResolutionStatus.INVALID_NON_REMEDIABLE:
+        requirement = CorrectionRequirement.NONE
+        correction_status = RemediationStatus.NOT_REQUIRED
+        republication_status = RemediationStatus.NOT_REQUIRED
     return ReconciliationConflict(
-        conflict_id=f"SYNTHETIC-CONFLICT-{status.value}",
-        field="close",
-        values=(
+        conflict_id or f"SYNTHETIC-CONFLICT-{status.value}",
+        "close",
+        (
             CompetingValue(
                 "SYNTHETIC-SOURCE-A",
                 "100.00",
@@ -218,56 +333,88 @@ def conflict(
                 ConfidenceLevel.MEDIUM,
             ),
         ),
-        tolerance_rule="SYNTHETIC-EXACT",
-        tolerance_version="SYNTHETIC-1",
-        measured_difference="1.00",
-        severity=severity,
-        resolution_status=status,
-        correction_requirement=(
-            CorrectionRequirement.CORRECTION_REQUIRED
-            if status is ConflictResolutionStatus.UNRESOLVED
-            else (
-                CorrectionRequirement.NONE
-                if status is ConflictResolutionStatus.INVALID_NON_REMEDIABLE
-                else CorrectionRequirement.REPUBLICATION_REQUIRED
-            )
-        ),
-        reviewer_evidence=EVIDENCE if reviewed else None,
-        reviewed_at=NOW if reviewed else None,
+        "SYNTHETIC-EXACT",
+        "SYNTHETIC-1",
+        "1.00",
+        severity,
+        status,
+        requirement,
+        execution(RemediationAction.CORRECTION, correction_status),
+        execution(RemediationAction.REPUBLICATION, republication_status),
+        EVIDENCE if reviewed else None,
+        NOW if reviewed else None,
     )
+
+
+def passing_context() -> tuple[
+    ProviderCapabilityRegistry,
+    DataUsagePolicy,
+    TerminationLifecycleRegistry,
+    EvaluationRequest,
+    ProviderScorecard,
+    EvaluationArtifact,
+]:
+    current_policy = policy()
+    current_capabilities = capabilities()
+    current_registry = registry()
+    current_request = request()
+    current_scorecard = scorecard(current_policy)
+    artifact = evaluate_hard_gates(
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+    )
+    return (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    )
+
+
+def publish(
+    conflict_records: tuple[ReconciliationConflict, ...] = (),
+    **changes: object,
+) -> PublicationStatus:
+    (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    ) = passing_context()
+    values: dict[str, object] = {
+        "evaluation_artifact": artifact,
+        "capabilities": current_capabilities,
+        "policy": current_policy,
+        "lifecycle_registry": current_registry,
+        "request": current_request,
+        "scorecard": current_scorecard,
+        "stale": False,
+        "critical_missing": False,
+        "reconciliation_conflicts": conflict_records,
+    }
+    values.update(changes)
+    return publication_gate(**values).status  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
     ("candidate", "expected"),
     [
         (policy(purpose=Permission.UNKNOWN), ReasonCode.PERMISSION_UNKNOWN),
-        (
-            policy(purpose=Permission.PROHIBITED),
-            ReasonCode.PURPOSE_NOT_PERMITTED,
-        ),
-        (
-            policy(until=NOW - timedelta(seconds=1)),
-            ReasonCode.AGREEMENT_EXPIRED,
-        ),
-        (
-            policy(raw=Permission.PROHIBITED),
-            ReasonCode.RAW_RETENTION_FORBIDDEN,
-        ),
-        (
-            policy(approval=ApprovalStatus.PENDING),
-            ReasonCode.PROVIDER_NOT_APPROVED,
-        ),
+        (policy(purpose=Permission.PROHIBITED), ReasonCode.PURPOSE_NOT_PERMITTED),
+        (policy(raw=Permission.PROHIBITED), ReasonCode.RAW_RETENTION_FORBIDDEN),
+        (policy(approval=ApprovalStatus.PENDING), ReasonCode.PROVIDER_NOT_APPROVED),
     ],
 )
-def test_policy_hard_gates(
-    candidate: DataUsagePolicy,
-    expected: ReasonCode,
-) -> None:
+def test_policy_hard_gates(candidate: DataUsagePolicy, expected: ReasonCode) -> None:
     result = evaluate_hard_gates(
-        capabilities(),
-        candidate,
-        request(),
-        scorecard(),
+        capabilities(), candidate, registry(), request(), scorecard(candidate)
     )
     assert not result.passed
     assert expected in result.reasons
@@ -275,167 +422,263 @@ def test_policy_hard_gates(
 
 
 def test_score_exists_only_after_all_hard_gates_pass() -> None:
-    result = evaluate_hard_gates(
-        capabilities(),
-        policy(),
-        request(),
-        scorecard(),
-    )
+    *_, result = passing_context()
     assert result.passed
     assert result.weighted_score == Decimal("80.00")
     assert result.scorecard_version == DEFAULT_SCORECARD_VERSION
 
 
+def test_terminated_agreement_without_lifecycle_fails_dedicated_reason() -> None:
+    terminated_policy = policy(termination_at=NOW)
+    result = evaluate_hard_gates(
+        capabilities(), terminated_policy, registry(), request(), scorecard(terminated_policy)
+    )
+    assert ReasonCode.AGREEMENT_EXPIRED in result.reasons
+    assert ReasonCode.TERMINATION_LIFECYCLE_MISSING in result.reasons
+    assert ReasonCode.TERMINATION_DELETION_OVERDUE not in result.reasons
+
+
+def test_pretermination_does_not_require_lifecycle() -> None:
+    *_, result = passing_context()
+    assert result.passed
+    assert ReasonCode.TERMINATION_LIFECYCLE_MISSING not in result.reasons
+
+
+def test_termination_exact_boundary_is_deterministic() -> None:
+    terminated_policy = policy(termination_at=NOW)
+    record = lifecycle(terminated_policy, deadline=NOW + timedelta(days=1))
+    result = evaluate_hard_gates(
+        capabilities(),
+        terminated_policy,
+        registry(record),
+        request(),
+        scorecard(terminated_policy),
+    )
+    assert result.reasons == (ReasonCode.AGREEMENT_EXPIRED,)
+
+
 @pytest.mark.parametrize(
-    ("evaluation_at", "latest_session"),
+    "changes",
     [
-        (
-            datetime(2026, 7, 10, 14, tzinfo=UTC),
-            LATEST_SESSION,
-        ),
-        (
-            datetime(2026, 7, 12, 9, tzinfo=UTC),
-            LATEST_SESSION,
-        ),
-        (
-            datetime(2026, 8, 15, 9, tzinfo=UTC),
-            LATEST_SESSION,
-        ),
-        (LATEST_SESSION, LATEST_SESSION),
+        {"provider_id": "SYNTHETIC-OTHER"},
+        {"product": "SYNTHETIC-OTHER"},
+        {"policy_id": "SYNTHETIC-OTHER"},
+        {"agreement_version": "SYNTHETIC-OTHER"},
+        {"termination_event_id": "SYNTHETIC-OTHER"},
     ],
 )
-def test_eod_coverage_uses_caller_supplied_completed_session(
-    evaluation_at: datetime,
-    latest_session: datetime,
-) -> None:
+def test_lifecycle_cross_agreement_substitution_fails(changes: dict[str, object]) -> None:
+    terminated_policy = policy(termination_at=NOW)
+    candidate = replace(
+        lifecycle(terminated_policy, deadline=NOW + timedelta(days=1)),
+        **changes,
+    )
     result = evaluate_hard_gates(
-        capabilities(historical_end=LATEST_SESSION),
-        policy(),
-        request(at=evaluation_at, latest_required_session=latest_session),
-        scorecard(),
+        capabilities(),
+        terminated_policy,
+        registry(candidate),
+        request(),
+        scorecard(terminated_policy),
+    )
+    assert ReasonCode.TERMINATION_LIFECYCLE_MISMATCH in result.reasons
+
+
+def test_inconsistent_termination_timestamp_fails_lifecycle_construction() -> None:
+    terminated_policy = policy(termination_at=NOW)
+    with pytest.raises(ValueError, match="completion cannot precede termination"):
+        replace(
+            lifecycle(terminated_policy, deadline=NOW + timedelta(days=1)),
+            termination_at=NOW + timedelta(seconds=1),
+        )
+
+
+def test_exact_lifecycle_identity_succeeds_deletion_evaluation() -> None:
+    terminated_policy = policy(termination_at=NOW)
+    candidate = lifecycle(terminated_policy, deadline=NOW + timedelta(days=1))
+    result = evaluate_hard_gates(
+        capabilities(),
+        terminated_policy,
+        registry(candidate),
+        request(),
+        scorecard(terminated_policy),
+    )
+    assert ReasonCode.TERMINATION_LIFECYCLE_MISSING not in result.reasons
+    assert ReasonCode.TERMINATION_LIFECYCLE_MISMATCH not in result.reasons
+
+
+@pytest.mark.parametrize("category", list(DataCategory))
+def test_completed_deletion_requires_category_specific_evidence(category: DataCategory) -> None:
+    with pytest.raises(ValueError, match="category-specific"):
+        DeletionDisposition(
+            category,
+            Permission.PROHIBITED,
+            DispositionState.COMPLETED,
+            NOW,
+            NOW,
+            (),
+            "SYNTHETIC-VERIFIER",
+            "SYNTHETIC-1",
+        )
+
+
+def test_one_deletion_certificate_cannot_support_unrelated_categories() -> None:
+    raw_evidence = DeletionEvidenceReference(
+        DataCategory.RAW_DATA,
+        EvidenceReference("SYNTHETIC-RAW-CERT", "SYNTHETIC-1", NOW),
+    )
+    raw = DeletionDisposition(
+        DataCategory.RAW_DATA,
+        Permission.PROHIBITED,
+        DispositionState.COMPLETED,
+        NOW,
+        NOW,
+        (raw_evidence,),
+        "SYNTHETIC-VERIFIER",
+        "SYNTHETIC-1",
+    )
+    assert raw.evidence_references == (raw_evidence,)
+    with pytest.raises(ValueError, match="governed category"):
+        replace(raw, category=DataCategory.BACKUPS)
+
+
+def test_retained_derived_permission_cannot_authorize_raw_retention() -> None:
+    with pytest.raises(ValueError, match="explicit category permission"):
+        disposition(
+            DataCategory.RAW_DATA,
+            Permission.PROHIBITED,
+            DispositionState.RETAINED,
+            NOW,
+        )
+
+
+def test_prohibited_category_overdue_after_deadline_fails() -> None:
+    terminated_policy = policy(termination_at=NOW - timedelta(days=2))
+    record = lifecycle(
+        terminated_policy,
+        deadline=NOW - timedelta(days=1),
+        prohibited_state=DispositionState.OVERDUE,
+    )
+    result = evaluate_hard_gates(
+        capabilities(), terminated_policy, registry(record), request(), scorecard(terminated_policy)
+    )
+    assert ReasonCode.TERMINATION_DELETION_OVERDUE in result.reasons
+
+
+def test_permitted_retention_is_distinct_from_deletion_completion() -> None:
+    retained = disposition(
+        DataCategory.DERIVED_DATA,
+        Permission.PERMITTED,
+        DispositionState.RETAINED,
+        NOW,
+    )
+    assert retained.state is DispositionState.RETAINED
+    assert retained.completion_at is None
+
+
+def test_approved_policy_rejects_empty_geography_scope() -> None:
+    with pytest.raises(ValueError, match="at least one"):
+        ProcessingGeographyGrant(GeographyScope.JURISDICTIONS, (), (EVIDENCE,))
+
+
+def test_unknown_processing_geography_fails_closed() -> None:
+    current_policy = policy()
+    result = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(processing_geography="SYNTHETIC-UNKNOWN"),
+        scorecard(current_policy),
+    )
+    assert ReasonCode.PROCESSING_GEOGRAPHY_UNKNOWN in result.reasons
+
+
+def test_explicit_processing_geography_passes() -> None:
+    *_, result = passing_context()
+    assert result.passed
+
+
+def test_restricted_processing_geography_fails() -> None:
+    current_policy = policy()
+    result = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(processing_geography="SYNTHETIC-FORBIDDEN-JURISDICTION"),
+        scorecard(current_policy),
+    )
+    assert ReasonCode.PURPOSE_NOT_PERMITTED in result.reasons
+
+
+def test_worldwide_permission_requires_explicit_typed_scope() -> None:
+    worldwide = ProcessingGeographyGrant(GeographyScope.WORLDWIDE, (), (EVIDENCE,))
+    current_policy = policy(geography=worldwide, restrictions=())
+    result = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(processing_geography="SYNTHETIC-ANYWHERE"),
+        scorecard(current_policy),
     )
     assert result.passed
 
 
-def test_insufficient_final_session_fails() -> None:
-    result = evaluate_hard_gates(
-        capabilities(historical_end=LATEST_SESSION - timedelta(seconds=1)),
-        policy(),
-        request(),
-        scorecard(),
+def test_permitted_and_restricted_geography_overlap_fails_construction() -> None:
+    with pytest.raises(ValueError, match="both permitted and restricted"):
+        policy(restrictions=("SYNTHETIC-JURISDICTION",))
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"permitted_users": ("",)},
+        {"approved_at": NOW + timedelta(days=121)},
+        {"review_due_at": NOW - timedelta(days=21)},
+        {
+            "approval_status": ApprovalStatus.REJECTED,
+            "approved_at": NOW - timedelta(days=1),
+            "rejected_at": NOW,
+            "review_due_at": None,
+        },
+        {"evidence_references": ()},
+    ],
+)
+def test_invalid_policy_identity_and_timeline_invariants_fail_at_construction(
+    changes: dict[str, object],
+) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        replace(policy(), **changes)
+
+
+def test_permission_maps_require_enums_and_are_defensively_immutable() -> None:
+    current = policy()
+    source = dict(current.permitted_purposes)
+    source[UsagePurpose.PRIVATE_HOUSEHOLD_RESEARCH] = "PERMITTED"  # type: ignore[assignment]
+    with pytest.raises(TypeError, match="Permission"):
+        replace(current, permitted_purposes=source)
+    with pytest.raises(TypeError):
+        current.permitted_purposes[UsagePurpose.BACKTESTING] = Permission.PERMITTED  # type: ignore[index]
+
+
+def test_capability_maps_are_defensively_copied_and_read_only() -> None:
+    source = {name: CapabilityState.SUPPORTED for name in CAPABILITY_NAMES}
+    candidate = ProviderCapabilityRegistry(
+        provider_id="SYNTHETIC-PROVIDER",
+        product="SYNTHETIC-PRODUCT",
+        version="SYNTHETIC-1",
+        capabilities=source,
+        historical_start=HISTORY_START,
+        historical_end=LATEST_SESSION,
+        history_gaps=(),
+        capability_evidence={name: (EVIDENCE,) for name in CAPABILITY_NAMES},
     )
-    assert ReasonCode.INSUFFICIENT_HISTORY in result.reasons
+    source["historical_depth"] = CapabilityState.UNKNOWN
+    assert candidate.capabilities["historical_depth"] is CapabilityState.SUPPORTED
+    with pytest.raises(TypeError):
+        candidate.capabilities["historical_depth"] = CapabilityState.UNKNOWN  # type: ignore[index]
 
 
-def test_intersecting_critical_gap_blocks_but_irrelevant_gap_does_not() -> None:
-    blocking = HistoryGap(
-        DataDomain.EOD_MARKET_DATA,
-        datetime(2026, 1, 1, tzinfo=UTC),
-        datetime(2026, 1, 2, tzinfo=UTC),
-        "NSE",
-        ("SYNTHETIC-SECURITY",),
-        None,
-        GapSeverity.CRITICAL,
-        EVIDENCE,
-        GapResolutionStatus.OPEN,
-    )
-    irrelevant = replace(
-        blocking,
-        affected_security_ids=("SYNTHETIC-OTHER",),
-    )
-    assert not evaluate_hard_gates(
-        capabilities(history_gaps=(blocking,)),
-        policy(),
-        request(),
-        scorecard(),
-    ).passed
-    assert evaluate_hard_gates(
-        capabilities(history_gaps=(irrelevant,)),
-        policy(),
-        request(),
-        scorecard(),
-    ).passed
-    assert evaluate_hard_gates(
-        capabilities(
-            history_gaps=(
-                replace(blocking, severity=GapSeverity.WARNING),
-                replace(
-                    blocking,
-                    resolution_status=GapResolutionStatus.RESOLVED,
-                ),
-            )
-        ),
-        policy(),
-        request(),
-        scorecard(),
-    ).passed
-
-
-def test_overdue_prohibited_post_termination_retention_fails_closed() -> None:
-    termination = NOW - timedelta(days=10)
-    deadline = NOW - timedelta(days=1)
-    result = evaluate_hard_gates(
-        capabilities(),
-        policy(),
-        request(
-            termination_lifecycle=lifecycle(
-                at=termination,
-                deadline=deadline,
-                raw=DeletionState.OVERDUE,
-                backup=DeletionState.OVERDUE,
-                fixture=DeletionState.OVERDUE,
-            )
-        ),
-        scorecard(),
-    )
-    assert ReasonCode.AGREEMENT_EXPIRED in result.reasons
-    assert ReasonCode.TERMINATION_DELETION_OVERDUE in result.reasons
-
-
-def test_permitted_derived_and_audit_retention_do_not_create_overdue_reason() -> None:
-    termination = NOW - timedelta(days=10)
-    deadline = NOW - timedelta(days=1)
-    result = evaluate_hard_gates(
-        capabilities(),
-        policy(),
-        request(
-            termination_lifecycle=lifecycle(
-                at=termination,
-                deadline=deadline,
-                raw=DeletionState.COMPLETED,
-                backup=DeletionState.COMPLETED,
-                fixture=DeletionState.COMPLETED,
-            )
-        ),
-        scorecard(),
-    )
-    assert ReasonCode.AGREEMENT_EXPIRED in result.reasons
-    assert ReasonCode.TERMINATION_DELETION_OVERDUE not in result.reasons
-
-
-def test_deletion_due_state_is_valid_at_exact_deadline() -> None:
-    result = evaluate_hard_gates(
-        capabilities(),
-        policy(),
-        request(
-            termination_lifecycle=lifecycle(
-                at=NOW - timedelta(days=1),
-                deadline=NOW,
-                raw=DeletionState.DUE,
-                backup=DeletionState.DUE,
-                fixture=DeletionState.DUE,
-            )
-        ),
-        scorecard(),
-    )
-    assert ReasonCode.AGREEMENT_EXPIRED in result.reasons
-    assert ReasonCode.TERMINATION_DELETION_OVERDUE not in result.reasons
-
-
-def test_envelope_gate_checks_bindings_schema_and_payload() -> None:
-    payload = b"SYNTHETIC-PAYLOAD"
-    digest = "sha256:c5b86bf2eb1a69ebc2991ed5fc9ef48dcf074462bd978490708d43386444d6a2"
-    envelope = ProviderResponseEnvelope(
+def envelope(governing_policy: DataUsagePolicy, payload: bytes) -> ProviderResponseEnvelope:
+    return ProviderResponseEnvelope(
         provider_id="SYNTHETIC-PROVIDER",
         product="SYNTHETIC-PRODUCT",
         product_version="SYNTHETIC-1",
@@ -445,68 +688,64 @@ def test_envelope_gate_checks_bindings_schema_and_payload() -> None:
         published_at=NOW - timedelta(minutes=1),
         payload_schema_version="SYNTHETIC-SCHEMA-1",
         content_type="application/json",
-        immutable_payload_hash=digest,
-        policy_id="SYNTHETIC-POLICY",
+        immutable_payload_hash=f"sha256:{hashlib.sha256(payload).hexdigest()}",
+        policy_id=governing_policy.policy_id,
+        agreement_version=governing_policy.agreement_version,
+        policy_snapshot_id=contract_snapshot_id(governing_policy),
         intended_usage_purpose=UsagePurpose.PRIVATE_HOUSEHOLD_RESEARCH,
     )
-    assert validate_provider_envelope(
-        envelope,
+
+
+def validate_envelope(
+    candidate: ProviderResponseEnvelope, payload: bytes
+) -> tuple[ReasonCode, ...]:
+    return validate_provider_envelope(
+        candidate,
         payload,
         capabilities(),
         policy(),
         request(),
         frozenset({"SYNTHETIC-SCHEMA-1"}),
-    ).passed
-    mismatches = (
-        replace(envelope, provider_id="SYNTHETIC-OTHER"),
-        replace(envelope, product="SYNTHETIC-OTHER"),
-        replace(envelope, policy_id="SYNTHETIC-OTHER"),
-        replace(
-            envelope,
-            intended_usage_purpose=UsagePurpose.BACKTESTING,
+    ).reasons
+
+
+def test_exact_valid_envelope_and_payload_pass() -> None:
+    payload = b"SYNTHETIC-PAYLOAD"
+    assert not validate_envelope(envelope(policy(), payload), payload)
+
+
+@pytest.mark.parametrize(
+    ("changes", "reason"),
+    [
+        ({"provider_id": "SYNTHETIC-OTHER"}, ReasonCode.ENVELOPE_MISMATCH),
+        ({"product": "SYNTHETIC-OTHER"}, ReasonCode.ENVELOPE_MISMATCH),
+        ({"product_version": "SYNTHETIC-OTHER"}, ReasonCode.ENVELOPE_MISMATCH),
+        ({"policy_id": "SYNTHETIC-OTHER"}, ReasonCode.ENVELOPE_MISMATCH),
+        (
+            {"agreement_version": "SYNTHETIC-OTHER"},
+            ReasonCode.ENVELOPE_AGREEMENT_MISMATCH,
         ),
-    )
-    for candidate in mismatches:
-        result = validate_provider_envelope(
-            candidate,
-            payload,
-            capabilities(),
-            policy(),
-            request(),
-            frozenset({"SYNTHETIC-SCHEMA-1"}),
-        )
-        assert ReasonCode.ENVELOPE_MISMATCH in result.reasons
-    schema_result = validate_provider_envelope(
-        replace(envelope, payload_schema_version="SYNTHETIC-SCHEMA-2"),
-        payload,
-        capabilities(),
-        policy(),
-        request(),
-        frozenset({"SYNTHETIC-SCHEMA-1"}),
-    )
-    assert ReasonCode.SCHEMA_NOT_ALLOWED in schema_result.reasons
-    payload_result = validate_provider_envelope(
-        envelope,
-        b"SYNTHETIC-CORRUPTED",
-        capabilities(),
-        policy(),
-        request(),
-        frozenset({"SYNTHETIC-SCHEMA-1"}),
-    )
-    assert ReasonCode.EVIDENCE_INTEGRITY_FAILURE in payload_result.reasons
-    expired_result = validate_provider_envelope(
-        replace(
-            envelope,
-            retrieved_at=NOW + timedelta(days=121),
-            published_at=NOW + timedelta(days=120),
+        (
+            {"policy_snapshot_id": f"sha256:{'0' * 64}"},
+            ReasonCode.ENVELOPE_POLICY_SNAPSHOT_MISMATCH,
         ),
-        payload,
-        capabilities(),
-        policy(),
-        request(at=NOW + timedelta(days=121)),
-        frozenset({"SYNTHETIC-SCHEMA-1"}),
+        (
+            {"intended_usage_purpose": UsagePurpose.BACKTESTING},
+            ReasonCode.ENVELOPE_MISMATCH,
+        ),
+        ({"payload_schema_version": "SYNTHETIC-OTHER"}, ReasonCode.SCHEMA_NOT_ALLOWED),
+    ],
+)
+def test_envelope_binding_mismatches_fail(changes: dict[str, object], reason: ReasonCode) -> None:
+    payload = b"SYNTHETIC-PAYLOAD"
+    assert reason in validate_envelope(replace(envelope(policy(), payload), **changes), payload)
+
+
+def test_single_byte_payload_mutation_fails_sha256() -> None:
+    payload = b"SYNTHETIC-PAYLOAD"
+    assert ReasonCode.EVIDENCE_INTEGRITY_FAILURE in validate_envelope(
+        envelope(policy(), payload), payload[:-1] + b"X"
     )
-    assert ReasonCode.AGREEMENT_EXPIRED in expired_result.reasons
 
 
 @pytest.mark.parametrize(
@@ -517,53 +756,109 @@ def test_envelope_gate_checks_bindings_schema_and_payload() -> None:
             PublicationStatus.QUARANTINED,
         ),
         (
-            conflict(ConflictResolutionStatus.INVALID_NON_REMEDIABLE),
-            PublicationStatus.REJECTED,
-        ),
-        (
-            conflict(ConflictResolutionStatus.RESOLVED_APPROVED),
-            PublicationStatus.ACCEPTED_WITH_WARNINGS,
-        ),
-        (
             conflict(
                 ConflictResolutionStatus.UNRESOLVED,
                 severity=GapSeverity.WARNING,
             ),
             PublicationStatus.ACCEPTED_WITH_WARNINGS,
         ),
+        (
+            conflict(ConflictResolutionStatus.INVALID_NON_REMEDIABLE),
+            PublicationStatus.REJECTED,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                correction_status=RemediationStatus.PENDING,
+            ),
+            PublicationStatus.QUARANTINED,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                correction_status=RemediationStatus.INVALID,
+            ),
+            PublicationStatus.QUARANTINED,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                correction_status=RemediationStatus.COMPLETED,
+            ),
+            PublicationStatus.ACCEPTED_WITH_WARNINGS,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                requirement=CorrectionRequirement.REPUBLICATION_REQUIRED,
+                correction_status=RemediationStatus.NOT_REQUIRED,
+                republication_status=RemediationStatus.PENDING,
+            ),
+            PublicationStatus.QUARANTINED,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                requirement=CorrectionRequirement.REPUBLICATION_REQUIRED,
+                correction_status=RemediationStatus.NOT_REQUIRED,
+                republication_status=RemediationStatus.COMPLETED,
+            ),
+            PublicationStatus.ACCEPTED_WITH_WARNINGS,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                requirement=CorrectionRequirement.CORRECTION_AND_REPUBLICATION_REQUIRED,
+                correction_status=RemediationStatus.COMPLETED,
+                republication_status=RemediationStatus.PENDING,
+            ),
+            PublicationStatus.QUARANTINED,
+        ),
+        (
+            conflict(
+                ConflictResolutionStatus.RESOLVED_APPROVED,
+                requirement=CorrectionRequirement.CORRECTION_AND_REPUBLICATION_REQUIRED,
+                correction_status=RemediationStatus.COMPLETED,
+                republication_status=RemediationStatus.COMPLETED,
+            ),
+            PublicationStatus.ACCEPTED_WITH_WARNINGS,
+        ),
     ],
 )
-def test_reconciliation_publication_transitions(
-    candidate: ReconciliationConflict,
-    expected: PublicationStatus,
+def test_reconciliation_transition_matrix(
+    candidate: ReconciliationConflict, expected: PublicationStatus
 ) -> None:
-    decision = publication_gate(
-        provider_gate=GateResult(
-            True,
-            (),
-            Decimal("80"),
-            DEFAULT_SCORECARD_VERSION,
-        ),
-        stale=False,
-        critical_missing=False,
-        reconciliation_conflicts=(candidate,),
+    assert publish((candidate,)) is expected
+
+
+def test_completed_remediation_without_evidence_fails_construction() -> None:
+    with pytest.raises(ValueError, match="requires evidence"):
+        RemediationExecution(
+            RemediationAction.CORRECTION,
+            RemediationStatus.COMPLETED,
+        )
+
+
+def test_multiple_conflicts_use_strictest_outcome() -> None:
+    warning = conflict(
+        ConflictResolutionStatus.UNRESOLVED,
+        severity=GapSeverity.WARNING,
+        conflict_id="SYNTHETIC-WARNING",
     )
-    assert decision.status is expected
-    assert decision.reconciliation_conflicts == (candidate,)
+    pending = conflict(
+        ConflictResolutionStatus.RESOLVED_APPROVED,
+        conflict_id="SYNTHETIC-PENDING",
+    )
+    rejected = conflict(
+        ConflictResolutionStatus.INVALID_NON_REMEDIABLE,
+        conflict_id="SYNTHETIC-REJECTED",
+    )
+    assert publish((warning, pending)) is PublicationStatus.QUARANTINED
+    assert publish((warning, pending, rejected)) is PublicationStatus.REJECTED
 
 
 def test_no_conflict_uses_normal_publication_path() -> None:
-    decision = publication_gate(
-        provider_gate=GateResult(
-            True,
-            (),
-            Decimal("80"),
-            DEFAULT_SCORECARD_VERSION,
-        ),
-        stale=False,
-        critical_missing=False,
-    )
-    assert decision.status is PublicationStatus.ACCEPTED
+    assert publish() is PublicationStatus.ACCEPTED
 
 
 def test_reconciliation_rejects_duplicate_sources_and_identical_values() -> None:
@@ -579,92 +874,322 @@ def test_reconciliation_rejects_duplicate_sources_and_identical_values() -> None
     with pytest.raises(ValueError, match="distinct"):
         replace(
             base,
-            values=(
-                base.values[0],
-                replace(base.values[1], value="100.00"),
-            ),
+            values=(base.values[0], replace(base.values[1], value="100.00")),
         )
 
 
-def test_reconciliation_requires_nonblank_values_and_review_evidence() -> None:
-    base = conflict(ConflictResolutionStatus.UNRESOLVED)
-    with pytest.raises(ValueError):
-        replace(base.values[0], semantic_basis="")
-    with pytest.raises(ValueError, match="evidence"):
-        replace(
-            base,
-            resolution_status=ConflictResolutionStatus.RESOLVED_APPROVED,
-            reviewer_evidence=None,
-            reviewed_at=NOW,
-        )
-    with pytest.raises(ValueError, match="cannot carry"):
-        replace(base, reviewer_evidence=EVIDENCE, reviewed_at=NOW)
+def test_scorecard_future_assessment_and_evidence_fail_pit_gate() -> None:
+    current_policy = policy()
+    future_assessment = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(current_policy, assessed_at=NOW + timedelta(seconds=1)),
+    )
+    assert ReasonCode.SCORECARD_FUTURE_ASSESSMENT in future_assessment.reasons
+    future_evidence = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(current_policy, evidence_available_at=NOW + timedelta(seconds=1)),
+    )
+    assert ReasonCode.SCORECARD_FUTURE_EVIDENCE in future_evidence.reasons
+
+
+def test_scorecard_exact_cutoff_boundary_succeeds() -> None:
+    current_policy = policy()
+    result = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(current_policy, assessed_at=NOW, evidence_available_at=NOW),
+    )
+    assert result.passed
 
 
 @pytest.mark.parametrize(
     "changes",
     [
-        {"permitted_users": ("",)},
-        {"permitted_processing_geographies": ("",)},
-        {"approved_at": NOW + timedelta(days=121)},
-        {"review_due_at": NOW - timedelta(days=21)},
-        {
-            "approval_status": ApprovalStatus.REJECTED,
-            "approved_at": NOW - timedelta(days=1),
-            "rejected_at": NOW,
-            "review_due_at": None,
-        },
-        {
-            "approval_status": ApprovalStatus.REJECTED,
-            "approved_at": None,
-            "rejected_at": NOW + timedelta(days=121),
-            "review_due_at": None,
-        },
-        {"evidence_references": ()},
+        {"policy_id": "SYNTHETIC-OTHER"},
+        {"agreement_version": "SYNTHETIC-OTHER"},
+        {"policy_snapshot_id": f"sha256:{'0' * 64}"},
     ],
 )
-def test_invalid_policy_invariants_fail_at_construction(
-    changes: dict[str, object],
-) -> None:
-    with pytest.raises((TypeError, ValueError)):
-        replace(policy(), **changes)
+def test_scorecard_wrong_policy_binding_fails(changes: dict[str, object]) -> None:
+    current_policy = policy()
+    candidate = replace(scorecard(current_policy), **changes)
+    result = evaluate_hard_gates(capabilities(), current_policy, registry(), request(), candidate)
+    assert ReasonCode.SCORECARD_POLICY_MISMATCH in result.reasons
 
 
-def test_permission_map_requires_permission_enum_members() -> None:
-    invalid: dict[UsagePurpose, Permission] = dict(policy().permitted_purposes)
-    invalid[UsagePurpose.PRIVATE_HOUSEHOLD_RESEARCH] = "PERMITTED"  # type: ignore[assignment]
-    with pytest.raises(TypeError, match="Permission"):
-        replace(policy(), permitted_purposes=invalid)
-
-
-@pytest.mark.parametrize("value", [Decimal("NaN"), Decimal("Infinity")])
-def test_non_finite_scores_fail(value: Decimal) -> None:
+@pytest.mark.parametrize(
+    "value",
+    [Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity")],
+)
+def test_non_finite_scores_and_weights_fail(value: Decimal) -> None:
+    current_policy = policy()
     with pytest.raises(ValueError):
-        scorecard(raw_score=value)
+        scorecard(current_policy, raw_score=value)
+    invalid = dict(DEFAULT_WEIGHTS)
+    invalid[ScoreDimension.COST] = value
+    with pytest.raises(ValueError):
+        scorecard(current_policy, weights=invalid)
 
 
-def test_invalid_weight_total_fails() -> None:
+@pytest.mark.parametrize("weight", [Decimal("-0.01"), Decimal("1.01")])
+def test_weight_bounds_fail(weight: Decimal) -> None:
+    invalid = dict(DEFAULT_WEIGHTS)
+    invalid[ScoreDimension.COST] = weight
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        scorecard(policy(), weights=invalid)
+
+
+def test_invalid_weight_total_missing_and_duplicate_dimensions_fail() -> None:
+    current_policy = policy()
     invalid = dict(DEFAULT_WEIGHTS)
     invalid[ScoreDimension.COST] = Decimal("0.06")
     with pytest.raises(ValueError, match="sum exactly"):
-        scorecard(weights=invalid)
-
-
-def test_scorecard_requires_exact_dimensions_and_evidence() -> None:
-    valid = scorecard()
+        scorecard(current_policy, weights=invalid)
+    valid = scorecard(current_policy)
     with pytest.raises(ValueError, match="complete"):
         replace(valid, entries=valid.entries[:-1])
-    with pytest.raises(ValueError, match="evidence"):
-        replace(valid.entries[0], evidence_references=())
+    with pytest.raises(ValueError, match="unique"):
+        replace(valid, entries=(*valid.entries[:-1], valid.entries[0]))
+
+
+def test_weighted_score_uses_deterministic_half_even_rounding() -> None:
+    assert scorecard(policy(), raw_score=Decimal("80.005")).weighted_score() == Decimal("80.00")
+    assert scorecard(policy(), raw_score=Decimal("80.015")).weighted_score() == Decimal("80.02")
+
+
+def universe_gap(**changes: object) -> HistoryGap:
+    values: dict[str, object] = {
+        "data_domain": DataDomain.EOD_MARKET_DATA,
+        "starts_at": datetime(2026, 1, 1, tzinfo=UTC),
+        "ends_at": datetime(2026, 1, 31, tzinfo=UTC),
+        "affected_venue": "NSE",
+        "affected_security_ids": (),
+        "affected_universe_scope": "NIFTY_200",
+        "severity": GapSeverity.CRITICAL,
+        "evidence": EVIDENCE,
+        "resolution_status": GapResolutionStatus.OPEN,
+    }
+    values.update(changes)
+    return HistoryGap(**values)  # type: ignore[arg-type]
+
+
+def membership(
+    state: MembershipState,
+    starts_at: datetime,
+    ends_at: datetime,
+) -> UniverseMembershipEvidence:
+    return UniverseMembershipEvidence(
+        "SYNTHETIC-SECURITY",
+        "NIFTY_200",
+        starts_at,
+        ends_at,
+        state,
+        EVIDENCE,
+    )
+
+
+def gap_request(**changes: object) -> EvaluationRequest:
+    values: dict[str, object] = {
+        "required_history_start": datetime(2026, 1, 1, tzinfo=UTC),
+        "latest_required_session": datetime(2026, 1, 31, tzinfo=UTC),
+        "required_universe_scope": None,
+    }
+    values.update(changes)
+    return request(**values)
+
+
+def test_explicit_security_vs_universe_gap_unknown_membership_blocks() -> None:
+    assert history_gap_relevant(universe_gap(), gap_request())
+
+
+def test_effective_dated_member_blocks_and_proven_nonmember_does_not() -> None:
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 1, 31, tzinfo=UTC)
+    assert history_gap_relevant(
+        universe_gap(),
+        gap_request(universe_membership_evidence=(membership(MembershipState.MEMBER, start, end),)),
+    )
+    assert not history_gap_relevant(
+        universe_gap(),
+        gap_request(
+            universe_membership_evidence=(membership(MembershipState.NON_MEMBER, start, end),)
+        ),
+    )
+
+
+def test_membership_changing_during_gap_blocks() -> None:
+    assert history_gap_relevant(
+        universe_gap(),
+        gap_request(
+            universe_membership_evidence=(
+                membership(
+                    MembershipState.NON_MEMBER,
+                    datetime(2026, 1, 1, tzinfo=UTC),
+                    datetime(2026, 1, 15, tzinfo=UTC),
+                ),
+                membership(
+                    MembershipState.MEMBER,
+                    datetime(2026, 1, 15, tzinfo=UTC),
+                    datetime(2026, 1, 31, tzinfo=UTC),
+                ),
+            )
+        ),
+    )
+
+
+def test_empty_requested_scope_fails_closed_for_relevant_gap() -> None:
+    assert history_gap_relevant(
+        universe_gap(),
+        gap_request(required_security_ids=(), required_universe_scope=None),
+    )
+
+
+def test_gap_domain_venue_and_closed_interval_boundaries() -> None:
+    candidate_request = gap_request()
+    assert not history_gap_relevant(universe_gap(affected_venue="BSE"), candidate_request)
+    assert not history_gap_relevant(
+        universe_gap(data_domain=DataDomain.FINANCIAL_FACTS), candidate_request
+    )
+    boundary = datetime(2026, 1, 1, tzinfo=UTC)
+    assert history_gap_relevant(
+        universe_gap(starts_at=boundary, ends_at=boundary),
+        gap_request(required_history_start=boundary, latest_required_session=boundary),
+    )
+
+
+def test_resolved_and_warning_history_gaps_do_not_block_gate() -> None:
+    current_policy = policy()
+    warning = universe_gap(severity=GapSeverity.WARNING)
+    resolved = universe_gap(resolution_status=GapResolutionStatus.RESOLVED)
+    result = evaluate_hard_gates(
+        capabilities(history_gaps=(warning, resolved)),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(current_policy),
+    )
+    assert result.passed
+
+
+def test_evaluation_artifact_is_factory_controlled_and_validates() -> None:
+    (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    ) = passing_context()
+    with pytest.raises(TypeError, match="only be created"):
+        EvaluationArtifact()
+    assert validate_evaluation_artifact(
+        artifact,
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+    )
+    assert artifact.schema_version == EVALUATION_ARTIFACT_SCHEMA_VERSION
+
+
+def test_publication_accepts_valid_artifact_and_rejects_mutated_inputs() -> None:
+    (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    ) = passing_context()
+    accepted = publication_gate(
+        evaluation_artifact=artifact,
+        capabilities=current_capabilities,
+        policy=current_policy,
+        lifecycle_registry=current_registry,
+        request=current_request,
+        scorecard=current_scorecard,
+        stale=False,
+        critical_missing=False,
+    )
+    assert accepted.status is PublicationStatus.ACCEPTED
+    rejected = publication_gate(
+        evaluation_artifact=artifact,
+        capabilities=current_capabilities,
+        policy=current_policy,
+        lifecycle_registry=current_registry,
+        request=replace(current_request, require_backup=True),
+        scorecard=current_scorecard,
+        stale=False,
+        critical_missing=False,
+    )
+    assert rejected.status is PublicationStatus.REJECTED
+    assert rejected.reasons[0].code == ReasonCode.EVALUATION_ARTIFACT_INVALID.value
+
+
+def test_failed_hard_gate_cannot_publish_accepted() -> None:
+    current_policy = policy(purpose=Permission.UNKNOWN)
+    artifact = evaluate_hard_gates(
+        capabilities(), current_policy, registry(), request(), scorecard(current_policy)
+    )
+    decision = publication_gate(
+        evaluation_artifact=artifact,
+        capabilities=capabilities(),
+        policy=current_policy,
+        lifecycle_registry=registry(),
+        request=request(),
+        scorecard=scorecard(current_policy),
+        stale=False,
+        critical_missing=False,
+    )
+    assert decision.status is PublicationStatus.REJECTED
+
+
+def test_eod_coverage_uses_caller_supplied_completed_session_boundaries() -> None:
+    current_policy = policy()
+    for evaluation_at in (
+        datetime(2026, 7, 10, 14, tzinfo=UTC),
+        datetime(2026, 7, 12, 9, tzinfo=UTC),
+        datetime(2026, 8, 15, 9, tzinfo=UTC),
+        LATEST_SESSION,
+    ):
+        candidate_request = request(at=evaluation_at)
+        candidate_scorecard = scorecard(
+            current_policy,
+            assessed_at=min(evaluation_at, NOW),
+        )
+        result = evaluate_hard_gates(
+            capabilities(),
+            current_policy,
+            registry(),
+            candidate_request,
+            candidate_scorecard,
+        )
+        assert ReasonCode.INSUFFICIENT_HISTORY not in result.reasons
+
+
+def test_insufficient_final_session_fails() -> None:
+    current_policy = policy()
+    result = evaluate_hard_gates(
+        capabilities(historical_end=LATEST_SESSION - timedelta(microseconds=1)),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(current_policy),
+    )
+    assert ReasonCode.INSUFFICIENT_HISTORY in result.reasons
 
 
 def test_deterministic_report_has_explicit_schema_and_versions() -> None:
-    gate = evaluate_hard_gates(
-        capabilities(),
-        policy(),
-        request(),
-        scorecard(),
-    )
+    *_, artifact = passing_context()
     sections = {
         "schema_mapping_report": {"mapped": ["SYNTHETIC-ID"]},
         "missing_field_report": {"missing": []},
@@ -673,9 +1198,10 @@ def test_deterministic_report_has_explicit_schema_and_versions() -> None:
         "identity_conflict_report": {"conflicts": []},
         "action_completeness_report": {"complete": True},
     }
-    first = deterministic_report("SYNTHETIC-PROVIDER", gate, sections)
-    second = deterministic_report("SYNTHETIC-PROVIDER", gate, sections)
+    first = deterministic_report("SYNTHETIC-PROVIDER", artifact, sections)
+    second = deterministic_report("SYNTHETIC-PROVIDER", artifact, sections)
     assert first == second
     payload = __import__("json").loads(first[0])
     assert payload["report_schema_version"] == REPORT_SCHEMA_VERSION
+    assert payload["evaluation_artifact_schema_version"] == EVALUATION_ARTIFACT_SCHEMA_VERSION
     assert payload["hard_gate"]["scorecard_version"] == DEFAULT_SCORECARD_VERSION
