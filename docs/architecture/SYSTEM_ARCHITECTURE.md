@@ -36,6 +36,10 @@ Python 3.12; stdlib domain objects; Pydantic at I/O boundaries when justified; P
 
 Every job is idempotent, creates a quality/lineage report and fails closed on material error. Outputs carry cutoff, source references, feature/scoring/config versions and reason codes. A scalar confidence score never overrides hard exclusions. No LLM controls eligibility or scores.
 
+The Task 2 real-data boundary evaluates immutable capability, policy, lifecycle-registry, scorecard and request snapshots. It emits a deterministic, content-addressed evaluation artifact for audit and reproduction. Before canonical publication, the complete hard-gate result is independently recomputed from those inputs and every result and snapshot field is compared with the supplied artifact. The content hash proves internal consistency, not evaluator execution or caller authenticity. Provider envelopes bind exact agreement and policy snapshots to exact received bytes.
+
+Termination disposition is registry-owned and agreement-bound. Geography is an explicit typed grant. Historical gap exclusion requires trustworthy effective-dated non-membership evidence; ambiguity is blocking. Reconciliation review and remediation execution are distinct state machines, so pending correction/republication quarantines data.
+
 ## Security boundaries
 
-Provider payloads and filings are hostile input. Unit tests have no network. Secrets and licensed/personal records stay outside Git. Personal records and external AI are prohibited until explicit privacy architecture approval.
+Provider payloads and filings are hostile input. The pytest harness denies common direct Python socket connection and datagram APIs. It does not provide subprocess, native-extension, container or operating-system-level network isolation. Secrets and licensed/personal records stay outside Git. Personal records and external AI are prohibited until explicit privacy architecture approval.

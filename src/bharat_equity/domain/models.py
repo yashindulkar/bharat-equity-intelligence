@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from collections.abc import Mapping
+from dataclasses import dataclass, field, fields
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -41,8 +42,10 @@ def _json_value(value: Any) -> Any:
         return value.value
     if isinstance(value, tuple):
         return [_json_value(item) for item in value]
-    if isinstance(value, dict):
-        return {key: _json_value(item) for key, item in value.items()}
+    if isinstance(value, Mapping):
+        return {str(key): _json_value(item) for key, item in value.items()}
+    if hasattr(value, "to_dict"):
+        return value.to_dict()
     return value
 
 
@@ -52,7 +55,7 @@ class Contract:
     SCHEMA: ClassVar[str] = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
-        return _json_value(asdict(self))  # type: ignore[no-any-return]
+        return {item.name: _json_value(getattr(self, item.name)) for item in fields(self)}
 
     def __post_init__(self) -> None:
         require_text(self.schema_version, "schema_version")

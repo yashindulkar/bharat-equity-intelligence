@@ -1,5 +1,55 @@
 # Release Checklist
 
+## Phase 1 Task 2 latest two-finding remediation (2026-07-17)
+
+- [x] Publication independently recomputes the complete hard-gate result from current immutable inputs.
+- [x] Artifact comparison covers schema/ID, pass state, ordered reasons, score/version, every capability/policy/lifecycle/scorecard/request snapshot, and evaluation cutoff.
+- [x] An internally consistent forged artifact cannot turn a failing authoritative result into publication authorization.
+- [x] Entry evidence cannot postdate its entry assessment; scorecard evidence cannot postdate its scorecard assessment; entries cannot postdate the scorecard.
+- [x] Evaluation-cutoff checks remain independent and fail future assessment/evidence.
+- [x] **Verified locally 2026-07-17:** `make check` passed structure/link, compilation, Ruff format/lint, strict mypy and the full suite: 169 tests.
+- [x] **Verified locally 2026-07-17:** unit 125, property 26 and focused provider-remediation 108 tests passed; `git diff --check` passed.
+- [x] **Verified locally 2026-07-17:** offline sdist/wheel build, clean installed-wheel CLI smoke, frozen dependency audit (`No known vulnerabilities found`) and Gitleaks history scan (`19 commits`, `no leaks found`) passed.
+- [x] **Verified 2026-07-17:** code/documentation head `ce4b771b9cb5d231de40704c855c6e523a73faf6` passed GitHub Actions run [29545604918](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29545604918); `quality`, `dependency-audit` and `secret-scan` all concluded `success`.
+
+**Boundary:** zero providers evaluated or approved. No real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. The original specialist agents were not reactivated. PR #4 must remain draft and unmerged pending a new independent ChatGPT architecture review.
+
+## Phase 1 Task 2 final architecture-review remediation (2026-07-17)
+
+- [x] Scope remains provider-entry architecture and synthetic evaluation only.
+- [x] Terminated agreements require an authoritative exact-agreement lifecycle record; omission and substitution fail with distinct reasons.
+- [x] Raw, backup, fixture, derived and audit-evidence dispositions have category-bound evidence and distinct retained/deleted states.
+- [x] Processing geography is a typed evidenced jurisdiction/worldwide grant; empty, unknown and overlapping rights fail closed.
+- [x] Envelopes bind agreement version and policy snapshot while hashing the exact received bytes.
+- [x] Reconciliation review is separate from correction/republication execution; incomplete remediation quarantines.
+- [x] Scorecards bind policy/agreement snapshots and reject future assessments/evidence.
+- [x] Ambiguous universe-gap relevance blocks unless cutoff-available effective-dated evidence proves disjointness.
+- [x] Historical control: publication required a factory-controlled content-addressed artifact matching evaluated snapshots. **Superseded by the independently recomputed authorization in the newer section above.**
+- [x] Common direct Python socket connection/datagram APIs are denied by pytest. This is not subprocess, native-extension, container or operating-system-level network isolation.
+- [x] **Verified locally 2026-07-17:** structure/link checks, compilation, Ruff format/lint, strict mypy and full suite passed: 156 tests.
+- [x] **Verified locally 2026-07-17:** unit 113, property 25, focused provider-remediation 95; deterministic Hypothesis profile retained.
+- [x] **Verified locally 2026-07-17:** `git diff --check`, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit (`No known vulnerabilities found`) and Gitleaks history scan (`no leaks found`) passed.
+- [x] **Verified 2026-07-17:** documentation head `171c38296046e219c34050352b0cc5e921118b3e` passed GitHub Actions run [29544526618](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29544526618); `quality`, `dependency-audit` and `secret-scan` all concluded `success`.
+
+**Release boundary:** zero providers evaluated; zero providers approved; no real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. All mandatory findings are fixed and CI succeeded. The architecture/harness remediation is ready for a new independent ChatGPT architecture review. No merge recommendation is made.
+
+## Phase 1 Task 2 remediation evidence (2026-07-16)
+
+- [x] Scope remains provider-entry architecture and synthetic evaluation only.
+- [x] Typed termination/deletion lifecycle replaces boolean completion state.
+- [x] EOD coverage uses explicit latest required completed session; calendar adapter is deferred.
+- [x] Typed history gaps block only relevant open critical intersections.
+- [x] Provider envelope binds provider/product/version/policy/purpose/schema and verifies payload bytes.
+- [x] Reconciliation types/invariants and policy-driven publication transitions are tested.
+- [x] Data-usage policy invalid states fail at construction.
+- [x] Evidence-bound, versioned scorecard replaces raw score dictionaries.
+- [x] Direct Python socket denial is accurately documented; subprocess network isolation is not claimed.
+- [x] Historical five-agent review records state scope, files, commands, findings, remediation, limitations, and decision.
+- [x] **Verified 2026-07-16:** structure/link, compilation, Ruff format/lint, strict mypy, full tests (99), property tests (17), git diff validation, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit, and Gitleaks passed locally.
+- [x] **Verified 2026-07-16:** draft PR #4 workflow run [29506071717](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29506071717) completed successfully for remediation commit `5935099`; jobs `quality`, `dependency-audit`, and `secret-scan` all concluded `success`.
+
+**Release decision: PASS only for the provider-entry architecture and synthetic evaluation harness.** Zero providers, zero real datasets, zero rankings, zero backtests, and zero recommendations are approved. Production adapters, provider/calendar integrations, and real-data operation remain blocked.
+
 ## Phase 1 Task 1 evidence (2026-07-11)
 
 - [x] Synthetic-only domain, PIT, provider, manifest and CLI foundation exists.
