@@ -15,9 +15,9 @@
 - [x] **Verified locally 2026-07-17:** structure/link checks, compilation, Ruff format/lint, strict mypy and full suite passed: 156 tests.
 - [x] **Verified locally 2026-07-17:** unit 113, property 25, focused provider-remediation 95; deterministic Hypothesis profile retained.
 - [x] **Verified locally 2026-07-17:** `git diff --check`, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit (`No known vulnerabilities found`) and Gitleaks history scan (`no leaks found`) passed.
-- [ ] Final GitHub Actions evidence for the documentation head is pending push.
+- [x] **Verified 2026-07-17:** documentation head `171c38296046e219c34050352b0cc5e921118b3e` passed GitHub Actions run [29544526618](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29544526618); `quality`, `dependency-audit` and `secret-scan` all concluded `success`.
 
-**Release boundary:** zero providers evaluated; zero providers approved; no real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. The architecture/harness remediation is ready for CI and then a new independent ChatGPT architecture review. No merge recommendation is made.
+**Release boundary:** zero providers evaluated; zero providers approved; no real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. All mandatory findings are fixed and CI succeeded. The architecture/harness remediation is ready for a new independent ChatGPT architecture review. No merge recommendation is made.
 
 ## Phase 1 Task 2 remediation evidence (2026-07-16)
 

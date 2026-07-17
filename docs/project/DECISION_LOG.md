@@ -47,5 +47,6 @@
 | D-043 | Accepted Task 2 final remediation | Publication | Replace caller-constructible gate results with factory-controlled content-addressed evaluation artifacts | Publication revalidates capability, policy, lifecycle, scorecard and request snapshots |
 | D-044 | Accepted Task 2 final remediation | Schema | Provider-policy schema is `3.0.0`; report schema is `2.0.0`; evaluation-artifact schema starts at `1.0.0` | Breaking lifecycle/geography/remediation/PIT-binding semantics require explicit major versions |
 | D-045 | Verified Task 2 final remediation | Implementation | Commit `f03797da08849e5e7062b74b579666b7fedc7153` implements the final architecture-review corrections | Local `make check` passed with 156 tests before documentation synchronization; final release evidence is recorded separately |
+| D-046 | Verified Task 2 final remediation | CI evidence | Documentation head `171c38296046e219c34050352b0cc5e921118b3e` passed workflow run 29544526618 | Quality, dependency-audit and secret-scan succeeded; final evidence-only commit remains subject to its own CI; no merge recommendation |
 
 No entry silently amends `MASTER_SPEC.md`; proposed corrections interpret ambiguous phase/release language and require human confirmation where noted.
