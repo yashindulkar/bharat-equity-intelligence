@@ -15,6 +15,8 @@
 
 These are versioned research defaults, not universal truth, provider approval, or evidence of suitability.
 
-**Verified — implementation, 2026-07-16.** Each dimension entry requires a finite 0–100 raw score, exact decimal weight, one or more versioned evidence references, nonblank assessor, UTC `assessed_at`, method version, explanation, and typed confidence. The scorecard requires the exact dimension set once each and weights summing exactly to 1. Provider/product/version must match the capability registry. The deterministic report includes report-schema and scorecard versions.
+**Verified — implementation commit `f03797d`, 2026-07-17.** A scorecard binds provider, product, product version, policy ID, agreement version, immutable policy snapshot, scorecard version, methodology version and UTC assessment time. Scorecard-level and dimension-level evidence references require explicit availability timestamps. Every dimension entry requires a finite Decimal 0–100 score, finite Decimal 0–1 weight, evidence, assessor, UTC `assessed_at`, matching method version, explanation, and typed confidence.
+
+The scorecard requires the exact dimension set once each and an exact Decimal weight total of 1. NaN and positive/negative infinity are rejected for both scores and weights. During evaluation, scorecard and entry assessments and all evidence availability times must be at or before `EvaluationRequest.at`; exact equality is allowed. Wrong policy/agreement/snapshot binding or future evidence fails the hard gate. The deterministic weighted total uses `ROUND_HALF_EVEN` and two decimal places. Scoring occurs only after every hard gate passes.
 
 **Verified:** zero real providers evaluated and zero approved.

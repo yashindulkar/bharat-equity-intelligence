@@ -2,8 +2,10 @@
 
 - Status: Accepted for Task 2
 - Date: 2026-07-13
-- Revised: 2026-07-16
+- Revised: 2026-07-17
 
-Version typed provider capabilities and data-usage policies separately. Every capability and purpose is explicit; unknown/unverified values fail applicable gates. Approval binds exact provider, product, agreement, dates, versioned evidence, reviewer, user and purpose.
+Version typed provider capabilities and data-usage policies separately. Every capability and purpose is explicit; unknown/unverified values fail applicable gates. Approval binds exact provider, product, agreement, dates, versioned evidence, reviewer, user, purpose and typed processing geography. Empty geography rights deny processing; worldwide permission must be explicit and evidenced.
 
-The Task 2 remediation is a breaking provider-policy contract change and therefore uses semantic schema version `2.0.0`. It replaces string history gaps with domain/interval/venue/scope/severity/evidence/resolution records; adds separate post-termination permissions and typed deletion lifecycle state; and replaces raw score dictionaries with an evidence-bound, versioned scorecard. EOD coverage compares with the caller's explicit latest required completed session, not evaluation wall-clock time. Quality scoring follows hard gates only.
+Termination is not request-supplied. An authoritative registry binds lifecycle records to provider, product, policy, agreement version, termination event and timestamp. Each governed category carries an independent immutable disposition and category-bound evidence. Missing/mismatched lifecycle state and overdue prohibited retention have distinct hard-failure reasons.
+
+The latest breaking contract revision uses provider-policy schema `3.0.0`. Capability and policy mappings are defensively copied and read-only. Scorecards bind the exact policy/agreement snapshot and enforce evidence availability at the evaluation cutoff. Quality scoring follows hard gates only.

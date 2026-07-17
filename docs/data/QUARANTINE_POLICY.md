@@ -1,10 +1,10 @@
 # Quarantine and publication policy
 
-**Verified — implementation, 2026-07-16.**
+**Verified — implementation commit `f03797d`, 2026-07-17.** Publication requires a valid factory-created, content-addressed `EvaluationArtifact` matching the current capability, policy, lifecycle, scorecard and request snapshots.
 
-- `ACCEPTED`: provider and record gates pass with no findings.
-- `ACCEPTED_WITH_WARNINGS`: gates pass and findings are non-blocking. This includes a reviewer-approved resolved reconciliation conflict, or an unresolved warning-severity conflict, with complete competing evidence preserved.
-- `QUARANTINED`: a remediable critical problem blocks canonical publication. An unresolved critical reconciliation conflict is quarantined.
-- `REJECTED`: policy/provider failure, stale data, integrity failure, prohibited use, or an invalid/non-remediable reconciliation conflict prevents publication.
+- `ACCEPTED`: the evaluation artifact is valid and passed, record gates pass, and no findings exist.
+- `ACCEPTED_WITH_WARNINGS`: gates pass and findings are nonblocking. This includes an unresolved warning-severity conflict or a reviewer-approved conflict whose required correction/republication is fully completed with evidence.
+- `QUARANTINED`: a remediable critical problem blocks canonical publication. This includes an unresolved critical conflict and any reviewed conflict with required correction or republication still pending or invalid.
+- `REJECTED`: invalid/failed evaluation artifact, stale data, policy/provider failure, integrity failure, prohibited use, or invalid/non-remediable reconciliation conflict prevents publication.
 
-The mere presence of a reconciliation conflict is not a quarantine condition. Conflict severity and typed resolution status drive the transition. Publication decisions preserve the complete typed conflict objects plus structured reason codes; no source value is discarded. A score never overrides a gate or publication status.
+Reviewer approval alone never permits a known correction/republication requirement to enter canonical publication. Completion claims without action-specific evidence fail contract construction. Strictness is `REJECTED` over `QUARANTINED` over warnings over normal acceptance. Complete typed conflicts and structured reasons are preserved; no source value is discarded and no score overrides publication status.

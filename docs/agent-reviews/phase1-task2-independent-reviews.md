@@ -77,3 +77,11 @@
 ## Historical conclusion
 
 The five 2026-07-13 reviews ended with no reported critical/high blocker in their assigned scopes. This evidence supports only the provider-entry architecture and synthetic harness at the reviewed commit. It approves no provider, contract, real dataset, ranking, backtest, or recommendation.
+
+## External architecture-review remediation — 2026-07-17
+
+**Verified — provenance.** The latest external architecture review supplied the twelve findings covering authoritative lifecycle state, agreement identity, category deletion evidence, geography, envelope snapshots, reconciliation execution, scorecard PIT binding, historical-gap ambiguity, publication artifacts, property coverage, network wording and release evidence.
+
+**Verified — implementation.** Primary-agent commit `f03797da08849e5e7062b74b579666b7fedc7153` implemented the code/test corrections. The primary agent inspected the final diff and ran the repository validation recorded in `RELEASE_CHECKLIST.md`.
+
+**Limitation.** The original five specialist agents did not independently review this 2026-07-17 remediation. They were not reactivated, and no new independent agent review was run. This record does not rewrite their historical findings or decisions. A new independent ChatGPT architecture review remains required before any merge recommendation.

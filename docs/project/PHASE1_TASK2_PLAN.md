@@ -13,4 +13,8 @@ Define the real-data entry architecture, contracts, policies, synthetic evaluati
 
 ## Evidence and release boundary
 
-Success requires all requested gate tests, suite-wide denial of direct Python socket APIs, deterministic output, review records, clean checks, and a draft unmerged PR. This does not claim subprocess-level network sandboxing. Human/provider decisions remain visibly open. No score exists after a hard-gate failure.
+Success requires all requested gate tests, denial of common direct Python socket connection/datagram APIs, deterministic output, review records, clean checks, and a draft unmerged PR. This does not provide subprocess, native-extension, container or operating-system-level network isolation. Human/provider decisions remain visibly open. No score exists after a hard-gate failure.
+
+## Final architecture-review remediation
+
+**Verified — implementation commit `f03797d`, 2026-07-17.** The final pass adds authoritative agreement-bound lifecycle state, category-specific deletion evidence, typed processing geography, envelope policy snapshots, remediation execution gates, PIT-bound scorecards, ambiguity-denying historical-gap relevance, and content-addressed publication authorization. It expands deterministic unit/adversarial and Hypothesis tests without adding an adapter or any later-phase behavior.

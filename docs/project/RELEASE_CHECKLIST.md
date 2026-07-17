@@ -1,5 +1,24 @@
 # Release Checklist
 
+## Phase 1 Task 2 final architecture-review remediation (2026-07-17)
+
+- [x] Scope remains provider-entry architecture and synthetic evaluation only.
+- [x] Terminated agreements require an authoritative exact-agreement lifecycle record; omission and substitution fail with distinct reasons.
+- [x] Raw, backup, fixture, derived and audit-evidence dispositions have category-bound evidence and distinct retained/deleted states.
+- [x] Processing geography is a typed evidenced jurisdiction/worldwide grant; empty, unknown and overlapping rights fail closed.
+- [x] Envelopes bind agreement version and policy snapshot while hashing the exact received bytes.
+- [x] Reconciliation review is separate from correction/republication execution; incomplete remediation quarantines.
+- [x] Scorecards bind policy/agreement snapshots and reject future assessments/evidence.
+- [x] Ambiguous universe-gap relevance blocks unless cutoff-available effective-dated evidence proves disjointness.
+- [x] Publication requires a factory-controlled content-addressed evaluation artifact matching all evaluated snapshots.
+- [x] Common direct Python socket connection/datagram APIs are denied by pytest. This is not subprocess, native-extension, container or operating-system-level network isolation.
+- [x] **Verified locally 2026-07-17:** structure/link checks, compilation, Ruff format/lint, strict mypy and full suite passed: 156 tests.
+- [x] **Verified locally 2026-07-17:** unit 113, property 25, focused provider-remediation 95; deterministic Hypothesis profile retained.
+- [x] **Verified locally 2026-07-17:** `git diff --check`, offline sdist/wheel build, installed-wheel CLI smoke, frozen dependency audit (`No known vulnerabilities found`) and Gitleaks history scan (`no leaks found`) passed.
+- [ ] Final GitHub Actions evidence for the documentation head is pending push.
+
+**Release boundary:** zero providers evaluated; zero providers approved; no real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. The architecture/harness remediation is ready for CI and then a new independent ChatGPT architecture review. No merge recommendation is made.
+
 ## Phase 1 Task 2 remediation evidence (2026-07-16)
 
 - [x] Scope remains provider-entry architecture and synthetic evaluation only.
