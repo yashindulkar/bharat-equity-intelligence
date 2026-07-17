@@ -13,7 +13,7 @@ from types import MappingProxyType
 
 from .models import Contract, require_finite, require_text, require_utc
 
-PROVIDER_POLICY_SCHEMA_VERSION = "3.0.0"
+PROVIDER_POLICY_SCHEMA_VERSION = "3.1.0"
 
 
 class CapabilityState(StrEnum):
@@ -820,6 +820,11 @@ class ScorecardEntry(ProviderPolicyContract):
         for name in ("assessor", "method_version", "explanation"):
             require_text(getattr(self, name), name)
         require_utc(self.assessed_at, "assessed_at")
+        if any(
+            item.available_at is not None and item.available_at > self.assessed_at
+            for item in self.evidence_references
+        ):
+            raise ValueError("entry evidence cannot become available after entry assessment")
         if not isinstance(self.dimension, ScoreDimension):
             raise TypeError("dimension must be a ScoreDimension member")
         if not isinstance(self.confidence, ConfidenceLevel):
@@ -858,6 +863,13 @@ class ProviderScorecard(ProviderPolicyContract):
             raise ValueError("scorecard-level evidence is required")
         if any(item.available_at is None for item in self.evidence_references):
             raise ValueError("scorecard-level evidence requires availability timestamps")
+        if any(
+            item.available_at is not None and item.available_at > self.assessed_at
+            for item in self.evidence_references
+        ):
+            raise ValueError(
+                "scorecard evidence cannot become available after scorecard assessment"
+            )
         dimensions = tuple(entry.dimension for entry in self.entries)
         if len(set(dimensions)) != len(dimensions):
             raise ValueError("scorecard dimensions must be unique")

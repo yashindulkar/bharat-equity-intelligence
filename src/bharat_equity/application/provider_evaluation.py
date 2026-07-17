@@ -131,7 +131,7 @@ def _request_snapshot_id(request: EvaluationRequest) -> str:
 
 @dataclass(frozen=True, slots=True, init=False)
 class EvaluationArtifact:
-    """Factory-controlled, content-addressed result of complete hard-gate evaluation."""
+    """Deterministic, content-addressed audit record of hard-gate evaluation."""
 
     schema_version: str
     artifact_id: str
@@ -626,6 +626,32 @@ def validate_provider_envelope(
     return EnvelopeGateResult(False, ordered) if ordered else EnvelopeGateResult(True, ())
 
 
+def _artifacts_match(artifact: EvaluationArtifact, authoritative: EvaluationArtifact) -> bool:
+    if not isinstance(artifact, EvaluationArtifact):
+        return False
+    try:
+        return all(
+            getattr(artifact, name) == getattr(authoritative, name)
+            for name in (
+                "schema_version",
+                "artifact_id",
+                "passed",
+                "reasons",
+                "weighted_score",
+                "scorecard_version",
+                "capability_snapshot_id",
+                "policy_snapshot_id",
+                "lifecycle_registry_snapshot_id",
+                "lifecycle_snapshot_id",
+                "scorecard_snapshot_id",
+                "request_snapshot_id",
+                "evaluated_at",
+            )
+        )
+    except AttributeError:
+        return False
+
+
 def validate_evaluation_artifact(
     artifact: EvaluationArtifact,
     capabilities: ProviderCapabilityRegistry,
@@ -634,43 +660,16 @@ def validate_evaluation_artifact(
     request: EvaluationRequest,
     scorecard: ProviderScorecard,
 ) -> bool:
-    if not isinstance(artifact, EvaluationArtifact):
-        return False
-    expected_lifecycle = lifecycle_registry.exact_record(policy)
-    capability_snapshot_id = contract_snapshot_id(capabilities)
-    policy_snapshot_id = contract_snapshot_id(policy)
-    lifecycle_registry_snapshot_id = contract_snapshot_id(lifecycle_registry)
-    lifecycle_snapshot_id = (
-        None
-        if expected_lifecycle is None or request.at < expected_lifecycle.termination_at
-        else contract_snapshot_id(expected_lifecycle)
+    """Recompute the authoritative result and compare every audit-artifact field."""
+
+    authoritative = evaluate_hard_gates(
+        capabilities,
+        policy,
+        lifecycle_registry,
+        request,
+        scorecard,
     )
-    scorecard_snapshot_id = contract_snapshot_id(scorecard)
-    request_snapshot_id = _request_snapshot_id(request)
-    content = _artifact_content(
-        passed=artifact.passed,
-        reasons=artifact.reasons,
-        weighted_score=artifact.weighted_score,
-        scorecard_version=artifact.scorecard_version,
-        capability_snapshot_id=capability_snapshot_id,
-        policy_snapshot_id=policy_snapshot_id,
-        lifecycle_registry_snapshot_id=lifecycle_registry_snapshot_id,
-        lifecycle_snapshot_id=lifecycle_snapshot_id,
-        scorecard_snapshot_id=scorecard_snapshot_id,
-        request_snapshot_id=request_snapshot_id,
-        evaluated_at=request.at,
-    )
-    return (
-        artifact.schema_version == EVALUATION_ARTIFACT_SCHEMA_VERSION
-        and artifact.artifact_id == _artifact_id(content)
-        and artifact.capability_snapshot_id == capability_snapshot_id
-        and artifact.policy_snapshot_id == policy_snapshot_id
-        and artifact.lifecycle_registry_snapshot_id == lifecycle_registry_snapshot_id
-        and artifact.lifecycle_snapshot_id == lifecycle_snapshot_id
-        and artifact.scorecard_snapshot_id == scorecard_snapshot_id
-        and artifact.request_snapshot_id == request_snapshot_id
-        and artifact.evaluated_at == request.at
-    )
+    return _artifacts_match(artifact, authoritative)
 
 
 def _remediation_incomplete(conflict: ReconciliationConflict) -> bool:
@@ -695,14 +694,14 @@ def publication_gate(
     warnings: tuple[StructuredReason, ...] = (),
 ) -> PublicationDecision:
     reasons = [*conflicts, *warnings]
-    valid_artifact = validate_evaluation_artifact(
-        evaluation_artifact,
+    authoritative_artifact = evaluate_hard_gates(
         capabilities,
         policy,
         lifecycle_registry,
         request,
         scorecard,
     )
+    valid_artifact = _artifacts_match(evaluation_artifact, authoritative_artifact)
     if not valid_artifact:
         reasons.append(
             StructuredReason(
@@ -710,10 +709,10 @@ def publication_gate(
                 "Evaluation artifact does not match current immutable inputs",
             )
         )
-    elif not evaluation_artifact.passed:
+    elif not authoritative_artifact.passed:
         reasons.extend(
             StructuredReason(code.value, "Provider hard gate failed")
-            for code in evaluation_artifact.reasons
+            for code in authoritative_artifact.reasons
         )
     if stale:
         reasons.append(StructuredReason("DATA_STALE", "Freshness threshold exceeded"))
@@ -779,7 +778,7 @@ def publication_gate(
                 "Resolved or non-critical conflict evidence is preserved",
             )
         )
-    if not valid_artifact or not evaluation_artifact.passed or stale or invalid_conflicts:
+    if not valid_artifact or not authoritative_artifact.passed or stale or invalid_conflicts:
         status = PublicationStatus.REJECTED
     elif critical_missing or conflicts or unresolved_critical or pending_remediation:
         status = PublicationStatus.QUARANTINED

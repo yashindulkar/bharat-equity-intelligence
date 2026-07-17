@@ -1,7 +1,9 @@
 import hashlib
+import json
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -178,12 +180,24 @@ def scorecard(
     weights: dict[ScoreDimension, Decimal] | None = None,
     assessed_at: datetime = NOW,
     evidence_available_at: datetime | None = None,
+    entry_assessed_at: datetime | None = None,
+    entry_evidence_available_at: datetime | None = None,
+    scorecard_evidence_available_at: datetime | None = None,
 ) -> ProviderScorecard:
     selected = weights or dict(DEFAULT_WEIGHTS)
-    score_evidence = EvidenceReference(
-        "SYNTHETIC-SCORE-EVIDENCE",
+    selected_entry_assessed_at = entry_assessed_at or assessed_at
+    shared_evidence_at = evidence_available_at or (
+        min(assessed_at, selected_entry_assessed_at) - timedelta(days=1)
+    )
+    scorecard_evidence = EvidenceReference(
+        "SYNTHETIC-SCORECARD-EVIDENCE",
         "SYNTHETIC-SCORE-EVIDENCE-1",
-        evidence_available_at or NOW - timedelta(days=1),
+        scorecard_evidence_available_at or shared_evidence_at,
+    )
+    entry_evidence = EvidenceReference(
+        "SYNTHETIC-ENTRY-EVIDENCE",
+        "SYNTHETIC-SCORE-EVIDENCE-1",
+        entry_evidence_available_at or shared_evidence_at,
     )
     return ProviderScorecard(
         provider_id="SYNTHETIC-PROVIDER",
@@ -195,15 +209,15 @@ def scorecard(
         scorecard_version=DEFAULT_SCORECARD_VERSION,
         methodology_version="SYNTHETIC-METHOD-1",
         assessed_at=assessed_at,
-        evidence_references=(score_evidence,),
+        evidence_references=(scorecard_evidence,),
         entries=tuple(
             ScorecardEntry(
                 dimension=dimension,
                 raw_score=raw_score,
                 weight=selected[dimension],
-                evidence_references=(score_evidence,),
+                evidence_references=(entry_evidence,),
                 assessor="SYNTHETIC-ASSESSOR",
-                assessed_at=assessed_at,
+                assessed_at=selected_entry_assessed_at,
                 method_version="SYNTHETIC-METHOD-1",
                 explanation=f"SYNTHETIC explanation for {dimension.value}",
                 confidence=ConfidenceLevel.MEDIUM,
@@ -374,6 +388,44 @@ def passing_context() -> tuple[
         current_scorecard,
         artifact,
     )
+
+
+def forged_artifact(
+    source: EvaluationArtifact,
+    **changes: object,
+) -> EvaluationArtifact:
+    """Reproduce the caller exploit: forge fields and a consistent content hash."""
+
+    names = (
+        "schema_version",
+        "passed",
+        "reasons",
+        "weighted_score",
+        "scorecard_version",
+        "capability_snapshot_id",
+        "policy_snapshot_id",
+        "lifecycle_registry_snapshot_id",
+        "lifecycle_snapshot_id",
+        "scorecard_snapshot_id",
+        "request_snapshot_id",
+        "evaluated_at",
+    )
+    values: dict[str, Any] = {name: getattr(source, name) for name in names}
+    values.update(changes)
+    content = {
+        **values,
+        "reasons": [reason.value for reason in values["reasons"]],
+        "weighted_score": (
+            None if values["weighted_score"] is None else str(values["weighted_score"])
+        ),
+        "evaluated_at": values["evaluated_at"].isoformat(),
+    }
+    payload = json.dumps(content, sort_keys=True, separators=(",", ":"))
+    values["artifact_id"] = f"sha256:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
+    forged = object.__new__(EvaluationArtifact)
+    for name, value in values.items():
+        object.__setattr__(forged, name, value)
+    return forged
 
 
 def publish(
@@ -893,9 +945,85 @@ def test_scorecard_future_assessment_and_evidence_fail_pit_gate() -> None:
         current_policy,
         registry(),
         request(),
-        scorecard(current_policy, evidence_available_at=NOW + timedelta(seconds=1)),
+        scorecard(
+            current_policy,
+            assessed_at=NOW + timedelta(seconds=1),
+            evidence_available_at=NOW + timedelta(seconds=1),
+        ),
     )
     assert ReasonCode.SCORECARD_FUTURE_EVIDENCE in future_evidence.reasons
+
+
+def test_entry_evidence_cannot_postdate_claimed_assessment() -> None:
+    with pytest.raises(ValueError, match="entry evidence cannot become available"):
+        scorecard(
+            policy(),
+            entry_assessed_at=NOW - timedelta(days=2),
+            entry_evidence_available_at=NOW - timedelta(days=1),
+        )
+
+
+def test_scorecard_evidence_cannot_postdate_claimed_assessment() -> None:
+    with pytest.raises(ValueError, match="scorecard evidence cannot become available"):
+        scorecard(
+            policy(),
+            assessed_at=NOW - timedelta(days=2),
+            entry_assessed_at=NOW - timedelta(days=2),
+            scorecard_evidence_available_at=NOW - timedelta(days=1),
+        )
+
+
+def test_score_evidence_exact_assessment_boundaries_succeed() -> None:
+    boundary = NOW - timedelta(days=1)
+    candidate = scorecard(
+        policy(),
+        assessed_at=boundary,
+        entry_assessed_at=boundary,
+        entry_evidence_available_at=boundary,
+        scorecard_evidence_available_at=boundary,
+    )
+    assert candidate.assessed_at == boundary
+    assert all(entry.assessed_at == boundary for entry in candidate.entries)
+
+
+def test_entry_assessment_cannot_follow_scorecard_assessment() -> None:
+    with pytest.raises(ValueError, match="entry assessment cannot follow"):
+        scorecard(
+            policy(),
+            assessed_at=NOW - timedelta(days=1),
+            entry_assessed_at=NOW,
+        )
+
+
+def test_historical_score_evidence_before_request_cutoff_succeeds() -> None:
+    current_policy = policy()
+    assessment = NOW - timedelta(days=1)
+    evidence = assessment - timedelta(days=1)
+    result = evaluate_hard_gates(
+        capabilities(),
+        current_policy,
+        registry(),
+        request(),
+        scorecard(
+            current_policy,
+            assessed_at=assessment,
+            entry_assessed_at=assessment,
+            entry_evidence_available_at=evidence,
+            scorecard_evidence_available_at=evidence,
+        ),
+    )
+    assert result.passed
+
+
+def test_evidence_before_cutoff_but_after_assessment_still_fails() -> None:
+    assessment = NOW - timedelta(days=2)
+    with pytest.raises(ValueError, match="entry evidence cannot become available"):
+        scorecard(
+            policy(),
+            assessed_at=NOW - timedelta(days=1),
+            entry_assessed_at=assessment,
+            entry_evidence_available_at=assessment + timedelta(hours=1),
+        )
 
 
 def test_scorecard_exact_cutoff_boundary_succeeds() -> None:
@@ -1099,6 +1227,162 @@ def test_evaluation_artifact_is_factory_controlled_and_validates() -> None:
         current_scorecard,
     )
     assert artifact.schema_version == EVALUATION_ARTIFACT_SCHEMA_VERSION
+
+
+def test_internally_consistent_forged_passing_artifact_cannot_authorize_failure() -> None:
+    current_policy = policy(purpose=Permission.UNKNOWN)
+    current_capabilities = capabilities()
+    current_registry = registry()
+    current_request = request()
+    current_scorecard = scorecard(current_policy)
+    failed = evaluate_hard_gates(
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+    )
+    assert not failed.passed
+    forged = forged_artifact(
+        failed,
+        passed=True,
+        reasons=(),
+        weighted_score=Decimal("80.00"),
+        scorecard_version=DEFAULT_SCORECARD_VERSION,
+    )
+    assert forged.artifact_id != failed.artifact_id
+    assert not validate_evaluation_artifact(
+        forged,
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+    )
+    decision = publication_gate(
+        evaluation_artifact=forged,
+        capabilities=current_capabilities,
+        policy=current_policy,
+        lifecycle_registry=current_registry,
+        request=current_request,
+        scorecard=current_scorecard,
+        stale=False,
+        critical_missing=False,
+    )
+    assert decision.status is PublicationStatus.REJECTED
+    assert decision.reasons[0].code == ReasonCode.EVALUATION_ARTIFACT_INVALID.value
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {
+            "passed": False,
+            "reasons": (ReasonCode.PERMISSION_UNKNOWN,),
+            "weighted_score": None,
+            "scorecard_version": None,
+        },
+        {"weighted_score": Decimal("99.99")},
+        {"scorecard_version": "SYNTHETIC-FORGED-SCORECARD"},
+    ],
+)
+def test_internally_consistent_result_field_forgery_is_rejected(
+    changes: dict[str, object],
+) -> None:
+    (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    ) = passing_context()
+    forged = forged_artifact(artifact, **changes)
+    assert not validate_evaluation_artifact(
+        forged,
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+    )
+
+
+def test_removing_failure_reason_from_consistent_artifact_is_rejected() -> None:
+    current_policy = policy(purpose=Permission.UNKNOWN)
+    current_scorecard = scorecard(current_policy)
+    failed = evaluate_hard_gates(
+        capabilities(), current_policy, registry(), request(), current_scorecard
+    )
+    assert failed.reasons
+    forged = forged_artifact(failed, reasons=failed.reasons[1:])
+    assert not validate_evaluation_artifact(
+        forged,
+        capabilities(),
+        current_policy,
+        registry(),
+        request(),
+        current_scorecard,
+    )
+
+
+def test_every_bound_input_snapshot_invalidates_stale_artifact() -> None:
+    (
+        current_capabilities,
+        current_policy,
+        current_registry,
+        current_request,
+        current_scorecard,
+        artifact,
+    ) = passing_context()
+    contexts = (
+        {
+            "capabilities": replace(current_capabilities, version="SYNTHETIC-2"),
+            "policy": current_policy,
+            "lifecycle_registry": current_registry,
+            "request": current_request,
+            "scorecard": current_scorecard,
+        },
+        {
+            "capabilities": current_capabilities,
+            "policy": replace(current_policy, reviewer="SYNTHETIC-SECOND-REVIEWER"),
+            "lifecycle_registry": current_registry,
+            "request": current_request,
+            "scorecard": current_scorecard,
+        },
+        {
+            "capabilities": current_capabilities,
+            "policy": current_policy,
+            "lifecycle_registry": replace(
+                current_registry, registry_version="SYNTHETIC-REGISTRY-2"
+            ),
+            "request": current_request,
+            "scorecard": current_scorecard,
+        },
+        {
+            "capabilities": current_capabilities,
+            "policy": current_policy,
+            "lifecycle_registry": current_registry,
+            "request": replace(current_request, require_backup=True),
+            "scorecard": current_scorecard,
+        },
+        {
+            "capabilities": current_capabilities,
+            "policy": current_policy,
+            "lifecycle_registry": current_registry,
+            "request": current_request,
+            "scorecard": replace(current_scorecard, scorecard_version="SYNTHETIC-SCORECARD-2"),
+        },
+    )
+    for context in contexts:
+        decision = publication_gate(
+            evaluation_artifact=artifact,
+            **context,  # type: ignore[arg-type]
+            stale=False,
+            critical_missing=False,
+        )
+        assert decision.status is PublicationStatus.REJECTED
+        assert decision.reasons[0].code == ReasonCode.EVALUATION_ARTIFACT_INVALID.value
 
 
 def test_publication_accepts_valid_artifact_and_rejects_mutated_inputs() -> None:

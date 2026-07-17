@@ -147,13 +147,23 @@ def base_scorecard(
     *,
     at: datetime = BASE,
     evidence_at: datetime | None = None,
+    entry_assessed_at: datetime | None = None,
+    entry_evidence_at: datetime | None = None,
+    scorecard_evidence_at: datetime | None = None,
     raw_scores: tuple[Decimal, ...] | None = None,
     weights: dict[ScoreDimension, Decimal] | None = None,
 ) -> ProviderScorecard:
-    evidence = EvidenceReference(
-        "SYNTHETIC-SCORE-EVIDENCE",
+    selected_entry_assessed_at = entry_assessed_at or at
+    shared_evidence_at = evidence_at or at
+    scorecard_evidence = EvidenceReference(
+        "SYNTHETIC-SCORECARD-EVIDENCE",
         "SYNTHETIC-1",
-        evidence_at or at,
+        scorecard_evidence_at or shared_evidence_at,
+    )
+    entry_evidence = EvidenceReference(
+        "SYNTHETIC-ENTRY-EVIDENCE",
+        "SYNTHETIC-1",
+        entry_evidence_at or shared_evidence_at,
     )
     selected_scores = raw_scores or tuple(Decimal("80") for _ in ScoreDimension)
     selected_weights = weights or {dimension: Decimal("0.125") for dimension in ScoreDimension}
@@ -167,15 +177,15 @@ def base_scorecard(
         scorecard_version=DEFAULT_SCORECARD_VERSION,
         methodology_version="SYNTHETIC-METHOD-1",
         assessed_at=at,
-        evidence_references=(evidence,),
+        evidence_references=(scorecard_evidence,),
         entries=tuple(
             ScorecardEntry(
                 dimension,
                 raw_score,
                 selected_weights[dimension],
-                (evidence,),
+                (entry_evidence,),
                 "SYNTHETIC-ASSESSOR",
-                at,
+                selected_entry_assessed_at,
                 "SYNTHETIC-METHOD-1",
                 "SYNTHETIC explanation",
                 ConfidenceLevel.MEDIUM,
@@ -400,6 +410,63 @@ def test_scorecard_assessment_and_evidence_obey_evaluation_cutoff(offset: int) -
         assert ReasonCode.SCORECARD_FUTURE_ASSESSMENT in result.reasons
         assert ReasonCode.SCORECARD_FUTURE_EVIDENCE in result.reasons
     else:
+        assert result.passed
+
+
+@given(
+    entry_evidence_offset=st.integers(min_value=-72, max_value=72),
+    entry_assessment_offset=st.integers(min_value=-72, max_value=72),
+    scorecard_evidence_offset=st.integers(min_value=-72, max_value=72),
+    scorecard_assessment_offset=st.integers(min_value=-72, max_value=72),
+    cutoff_offset=st.integers(min_value=0, max_value=72),
+)
+@pytest.mark.property
+def test_complete_score_evidence_temporal_ordering_contract(
+    entry_evidence_offset: int,
+    entry_assessment_offset: int,
+    scorecard_evidence_offset: int,
+    scorecard_assessment_offset: int,
+    cutoff_offset: int,
+) -> None:
+    policy = base_policy()
+    entry_evidence_at = BASE + timedelta(hours=entry_evidence_offset)
+    entry_assessed_at = BASE + timedelta(hours=entry_assessment_offset)
+    scorecard_evidence_at = BASE + timedelta(hours=scorecard_evidence_offset)
+    scorecard_assessed_at = BASE + timedelta(hours=scorecard_assessment_offset)
+    cutoff = BASE + timedelta(hours=cutoff_offset)
+    intrinsic_valid = (
+        entry_evidence_at <= entry_assessed_at <= scorecard_assessed_at
+        and scorecard_evidence_at <= scorecard_assessed_at
+    )
+    if not intrinsic_valid:
+        with pytest.raises(ValueError):
+            base_scorecard(
+                policy,
+                at=scorecard_assessed_at,
+                entry_assessed_at=entry_assessed_at,
+                entry_evidence_at=entry_evidence_at,
+                scorecard_evidence_at=scorecard_evidence_at,
+            )
+        return
+    candidate = base_scorecard(
+        policy,
+        at=scorecard_assessed_at,
+        entry_assessed_at=entry_assessed_at,
+        entry_evidence_at=entry_evidence_at,
+        scorecard_evidence_at=scorecard_evidence_at,
+    )
+    result = evaluate_hard_gates(
+        base_capabilities(),
+        policy,
+        empty_registry(),
+        base_request(at=cutoff),
+        candidate,
+    )
+    future_assessment = scorecard_assessed_at > cutoff or entry_assessed_at > cutoff
+    future_evidence = scorecard_evidence_at > cutoff or entry_evidence_at > cutoff
+    assert (ReasonCode.SCORECARD_FUTURE_ASSESSMENT in result.reasons) is future_assessment
+    assert (ReasonCode.SCORECARD_FUTURE_EVIDENCE in result.reasons) is future_evidence
+    if not future_assessment and not future_evidence:
         assert result.passed
 
 
