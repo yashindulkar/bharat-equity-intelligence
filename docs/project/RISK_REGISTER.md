@@ -34,9 +34,9 @@
 | R-30 | Empty or ambiguous geography is interpreted as unrestricted | Medium / Critical | Typed jurisdiction/worldwide grant; canonical IDs; overlap construction checks; unknown denies | Licensing + security |
 | R-31 | Envelope or scorecard is rebound to an earlier agreement/policy snapshot | Medium / Critical | Exact agreement version and content-addressed policy binding | Provider architecture |
 | R-32 | Reviewer approval is mistaken for completed correction/republication | Medium / Critical | Separate remediation execution state/evidence; incomplete work quarantines | Data quality |
-| R-33 | Future score evidence leaks into earlier provider selection | Medium / Critical | Assessment/evidence availability must not exceed request cutoff | PIT reviewer |
+| R-33 | Future or post-assessment score evidence creates false PIT chronology | Medium / Critical | Evidence must exist by its claimed entry/scorecard assessment; all evidence and assessments must also precede the request cutoff | PIT reviewer |
 | R-34 | Ambiguous historical universe membership hides a relevant gap | High / Critical | Closed intervals; effective-dated evidence; unknown/incomplete coverage blocks | PIT + data quality |
-| R-35 | Caller fabricates publication approval | Medium / Critical | Factory-controlled content-addressed evaluation artifact revalidated against all snapshots | Architecture + security |
+| R-35 | Caller fabricates publication approval with an internally consistent artifact | Medium / Critical | Publication independently recomputes the complete hard-gate result and compares every audit-artifact result/snapshot field; content hash is not authentication | Architecture + security |
 | R-36 | Test network control is mistaken for OS isolation | Medium / High | Exact wording: common direct Python socket APIs only; no subprocess/native/container/OS sandbox claim | Security |
 
 Critical risks block the applicable release until evidence is attached; “accepted risk” requires a named human and expiry date. Phase 1 Task 1 PASS applies only to its synthetic foundation and does not close the real-data, regulatory or production triggers above.

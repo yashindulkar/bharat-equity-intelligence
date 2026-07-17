@@ -1,6 +1,6 @@
 # Quarantine and publication policy
 
-**Verified — implementation commit `f03797d`, 2026-07-17.** Publication requires a valid factory-created, content-addressed `EvaluationArtifact` matching the current capability, policy, lifecycle, scorecard and request snapshots.
+**Verified — implementation commits `f03797d` and `e767ee3`, 2026-07-17.** Publication reruns the complete hard-gate evaluator from the current capability, policy, lifecycle registry, request and scorecard. The supplied deterministic, content-addressed audit artifact must exactly equal that authoritative result across all result and snapshot fields. Its hash is not treated as authentication or proof of evaluator execution.
 
 - `ACCEPTED`: the evaluation artifact is valid and passed, record gates pass, and no findings exist.
 - `ACCEPTED_WITH_WARNINGS`: gates pass and findings are nonblocking. This includes an unresolved warning-severity conflict or a reviewer-approved conflict whose required correction/republication is fully completed with evidence.

@@ -1,5 +1,19 @@
 # Release Checklist
 
+## Phase 1 Task 2 latest two-finding remediation (2026-07-17)
+
+- [x] Publication independently recomputes the complete hard-gate result from current immutable inputs.
+- [x] Artifact comparison covers schema/ID, pass state, ordered reasons, score/version, every capability/policy/lifecycle/scorecard/request snapshot, and evaluation cutoff.
+- [x] An internally consistent forged artifact cannot turn a failing authoritative result into publication authorization.
+- [x] Entry evidence cannot postdate its entry assessment; scorecard evidence cannot postdate its scorecard assessment; entries cannot postdate the scorecard.
+- [x] Evaluation-cutoff checks remain independent and fail future assessment/evidence.
+- [x] **Verified locally 2026-07-17:** `make check` passed structure/link, compilation, Ruff format/lint, strict mypy and the full suite: 169 tests.
+- [x] **Verified locally 2026-07-17:** unit 125, property 26 and focused provider-remediation 108 tests passed; `git diff --check` passed.
+- [x] **Verified locally 2026-07-17:** offline sdist/wheel build, clean installed-wheel CLI smoke, frozen dependency audit (`No known vulnerabilities found`) and Gitleaks history scan (`19 commits`, `no leaks found`) passed.
+- [ ] Final GitHub Actions quality, dependency-audit and secret-scan jobs succeed for the pushed remediation head.
+
+**Boundary:** zero providers evaluated or approved. No real data, adapter, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration. The original specialist agents were not reactivated. PR #4 must remain draft and unmerged pending a new independent ChatGPT architecture review.
+
 ## Phase 1 Task 2 final architecture-review remediation (2026-07-17)
 
 - [x] Scope remains provider-entry architecture and synthetic evaluation only.
@@ -10,7 +24,7 @@
 - [x] Reconciliation review is separate from correction/republication execution; incomplete remediation quarantines.
 - [x] Scorecards bind policy/agreement snapshots and reject future assessments/evidence.
 - [x] Ambiguous universe-gap relevance blocks unless cutoff-available effective-dated evidence proves disjointness.
-- [x] Publication requires a factory-controlled content-addressed evaluation artifact matching all evaluated snapshots.
+- [x] Historical control: publication required a factory-controlled content-addressed artifact matching evaluated snapshots. **Superseded by the independently recomputed authorization in the newer section above.**
 - [x] Common direct Python socket connection/datagram APIs are denied by pytest. This is not subprocess, native-extension, container or operating-system-level network isolation.
 - [x] **Verified locally 2026-07-17:** structure/link checks, compilation, Ruff format/lint, strict mypy and full suite passed: 156 tests.
 - [x] **Verified locally 2026-07-17:** unit 113, property 25, focused provider-remediation 95; deterministic Hypothesis profile retained.

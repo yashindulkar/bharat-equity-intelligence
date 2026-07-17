@@ -11,3 +11,5 @@
 - Nonrequired actions must be `NOT_REQUIRED`; required actions cannot be `NOT_REQUIRED`.
 
 Publication behavior is policy-driven: invalid/non-remediable → `REJECTED`; unresolved critical → `QUARANTINED`; unresolved warning → `ACCEPTED_WITH_WARNINGS`; reviewed but incomplete/invalid required correction or republication → `QUARANTINED`; fully reviewed and fully remediated → `ACCEPTED_WITH_WARNINGS`; no findings → normal path. Multiple conflicts use the strictest result. No last-write-wins behavior is permitted.
+
+Before these reconciliation transitions are considered publishable, publication independently recomputes the provider hard-gate result and requires exact equality with the supplied content-addressed audit artifact. Reconciliation status cannot compensate for an invalid or mismatched evaluation artifact.

@@ -8,7 +8,7 @@ Processing geography is an evidence-backed typed grant: either a nonempty canoni
 
 Post-termination terms separately govern raw data, backups, fixtures, derived data and audit hashes/evidence. The authoritative lifecycle registry must contain one exact provider/product/policy/agreement/termination-event record when termination applies. Every category has its own permission, deadline, state, evidence, verifier and version. Category-bound deletion evidence is not transferable to another category. `RETAINED` requires permission and is not represented as `COMPLETED`. Missing/mismatched lifecycle state and overdue prohibited retention fail independently from the unconditional new-ingestion rejection.
 
-Provider envelopes and scorecards bind the policy ID, agreement version and immutable policy snapshot. Scorecard evidence must have been available by the evaluation cutoff. Post-termination retention permission never authorizes new retrieval.
+Provider envelopes and scorecards bind the policy ID, agreement version and immutable policy snapshot. Entry evidence must have existed by its claimed entry assessment; scorecard-level evidence must have existed by the scorecard assessment; all evidence and assessments must also precede the evaluation cutoff. Post-termination retention permission never authorizes new retrieval.
 
 **Verified — human statement 2026-07-13:** Yash operates; Yash's mother makes the final investment decision; household-only/private/no-public/no-paid/no-sharing/no-social use; local-first Mac; NSE/EOD/prospective Nifty 200 scope; no personal portfolio data; BSE deferred; external AI access to licensed raw data denied absent explicit contract permission.
 
