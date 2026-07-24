@@ -17,7 +17,9 @@ Private, research-only decision support for long-term Indian equity analysis. It
 
 ## Status
 
-Phase 0 governance is merged, and Phase 1 Task 1's synthetic-only core data-contract and point-in-time foundation has a PASS decision with documented limitations. No real-data pipeline, ranking, backtest, stock recommendation, portfolio allocation, UI, ML, or broker order placement exists. This status does not authorize a later phase. See [release checklist](docs/project/RELEASE_CHECKLIST.md), [master plan](docs/project/MASTER_PLAN.md), and [open questions](docs/project/OPEN_QUESTIONS.md).
+**Verified — 2026-07-24:** Phase 0 governance is merged; Phase 1 Task 1's synthetic-only core data-contract and point-in-time foundation has a PASS decision with documented limitations; and Phase 1 Task 2's provider-entry architecture and synthetic evaluation harness was completed and merged on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`. Task 2 evaluated and approved zero providers. No real-data pipeline, provider adapter, ranking, backtest, stock recommendation, portfolio allocation, UI, ML, or broker order placement exists.
+
+**Proposal — next planned task:** Phase 1 Task 3 — Provider Selection and RFI. Task 3 has not been implemented and requires a separate architecture/planning review before implementation. Real-data operation remains blocked until an exact provider/product/agreement passes the gate. See [release checklist](docs/project/RELEASE_CHECKLIST.md), [master plan](docs/project/MASTER_PLAN.md), and [open questions](docs/project/OPEN_QUESTIONS.md).
 
 ## Intended boundaries
 

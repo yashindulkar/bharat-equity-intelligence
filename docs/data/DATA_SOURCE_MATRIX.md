@@ -17,3 +17,5 @@ Required contract evidence: legal entity/product/version; fields/venue/history; 
 **Rejected assumption:** exchange webpages, bhavcopies, current constituent CSVs or convenience libraries alone satisfy historical PIT and production rights.
 
 **Task 2 status (2026-07-13):** zero providers evaluated and zero approved. The RFI and synthetic scorecard are now defined; annual budget and exact products remain open. No page was scraped and no real payload was obtained.
+
+**Verified — post-merge closeout, 2026-07-24:** the preceding 2026-07-13 status remains historically accurate. Task 2 subsequently completed and merged on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`; it still evaluated and approved zero providers/products/agreements. Provider selection and RFI execution move to separately reviewed Phase 1 Task 3. Task 3 has not been implemented, and real-data operation remains blocked.

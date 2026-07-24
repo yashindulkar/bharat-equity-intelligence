@@ -40,6 +40,8 @@ Establish an actionable, reviewable foundation without production behavior. Exit
 
 Private household use; no consideration, publication, third-party access, live broker connectivity, or personal data in Phase 1. These are assumptions, not legal conclusions.
 
-## Current task
+## Current status and next planned task
 
-Phase 1 Task 2 defines and tests the real-data entry gate and provider architecture using synthetic inputs only. It does not approve or implement a provider adapter. Real ingestion remains blocked until one exact provider/product/agreement passes capability, usage-rights, PIT, identity, history, retention, reconciliation and publication gates.
+**Verified — 2026-07-24:** Phase 1 Task 2 is completed and was merged on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`. Its PASS decision applies only to the real-data entry gate, provider-entry architecture and synthetic evaluation harness. Task 2 evaluated and approved zero providers and implemented no provider adapter or real-data operation.
+
+**Proposal — next planned task:** Phase 1 Task 3 — Provider Selection and RFI. This is a planning boundary only: Task 3 has not been implemented and requires a separate architecture/planning review before implementation. Provider/product/agreement selection, RFI execution and evidence assessment belong to that separately approved task. Real ingestion remains blocked until one exact provider/product/agreement passes capability, usage-rights, PIT, identity, history, retention, reconciliation and publication gates.

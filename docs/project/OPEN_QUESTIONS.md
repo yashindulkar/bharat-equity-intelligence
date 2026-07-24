@@ -21,8 +21,10 @@
 11. Capacity for loss, liquidity needs, emergency fund, household exposures and approved numerical limits?
 12. Authentication roles, recovery channel, security reporting address, telemetry/AI vendors, deletion/correction and incident owner?
 
-## Task 2 provider-entry decisions
+## Phase 1 Task 3 provider-selection inputs
 
-13. Which exact provider/product/agreement passes the RFI, field mapping and usage-policy approval?
+**Open question — next-task boundary:** these questions move to Phase 1 Task 3 — Provider Selection and RFI. They do not imply that Task 3 has started. A separate architecture/planning review is required before implementation.
+
+13. Which exact provider/product/agreement, if any, passes the RFI, field mapping and usage-policy approval?
 14. Does an agreement explicitly permit licensed raw payload transfer to any named external AI provider? Default is no.
 15. What tolerances and human escalation SLA apply to each reconciled field when a second source is later authorized?
