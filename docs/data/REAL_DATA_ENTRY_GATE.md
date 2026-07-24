@@ -47,3 +47,7 @@ Provider scorecards bind provider/product/product version and policy/agreement s
 The pipeline boundary remains: provider → immutable raw evidence, only where permitted → provider staging → schema validation → semantic validation → identity resolution → PIT normalization → reconciliation → data-quality/quarantine gate → canonical publication → dataset manifest. Task 2 models and tests this boundary; it does not orchestrate or ingest real data.
 
 **Verified:** zero providers evaluated and zero providers approved.
+
+**Verified — post-merge closeout, 2026-07-24:** Task 2 completed and merged on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`. The gate and synthetic harness do not authorize real-data operation. No provider, product or agreement has passed this gate.
+
+**Proposal — next planned task:** Phase 1 Task 3 — Provider Selection and RFI owns provider-selection and RFI work, subject to a separate architecture/planning review before implementation. Task 3 has not been implemented.

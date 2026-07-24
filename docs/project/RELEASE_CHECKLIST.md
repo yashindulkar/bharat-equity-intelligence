@@ -1,5 +1,25 @@
 # Release Checklist
 
+## Phase 1 Task 2 post-merge closeout (2026-07-24)
+
+- [x] **Verified:** PR #4 merged into `main` on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`.
+- [x] **Verified:** the final Task 2 scope is only the provider-entry architecture, real-data entry gate and synthetic evaluation harness.
+- [x] **Verified historical evidence:** before merge, code/documentation head `ce4b771b9cb5d231de40704c855c6e523a73faf6` passed GitHub Actions run [29545604918](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/29545604918); `quality`, `dependency-audit` and `secret-scan` concluded `success`.
+- [x] **Verified historical evidence:** the final recorded pre-merge local validation passed `make check` with 169 tests, unit 125, property 26, focused provider-remediation 108, offline build/install smoke, frozen dependency audit, Gitleaks and `git diff --check`.
+- [x] **Verified:** this closeout synchronizes post-merge documentation without changing the Task 2 architecture.
+- [x] **Verified:** zero providers, products or agreements were evaluated or approved; no adapter, real data, scraping, ranking, factors, backtesting, recommendations, portfolio logic, UI, ML or broker integration was introduced.
+- [x] **Verified:** real-data operation remains blocked. Provider selection and RFI work belongs to the next separately approved task.
+- [x] **Verified locally 2026-07-24:** `uv run --frozen --extra dev make check` passed structure/local-link checks, compilation, Ruff format/lint, strict mypy and the full suite: 169 tests.
+- [x] **Verified locally 2026-07-24:** unit 125, property 26, leakage 10, integration 7 and security 1 tests passed in the explicit category run.
+- [x] **Verified locally 2026-07-24:** explicit-offline sdist/wheel build and clean installed-wheel CLI smoke passed; the frozen dependency audit reported `No known vulnerabilities found`.
+- [x] **Verified locally 2026-07-24:** Gitleaks history scan covered 22 commits and the working-directory scan also completed; both reported `no leaks found`.
+- [x] **Verified locally 2026-07-24:** `git diff --check` passed.
+- [x] **Proposal — next planned task:** Phase 1 Task 3 — Provider Selection and RFI. Task 3 has not been implemented and requires a separate architecture/planning review before implementation.
+
+**Release decision:** PASS only for the Phase 1 Task 2 provider-entry architecture and synthetic evaluation harness. The dated pre-merge sections below remain historical evidence; their draft/unmerged statements describe the state when written and are superseded only by this closeout.
+
+**Closeout validation limitation:** no closeout-branch CI result is claimed before the draft PR runs its workflow. Local structure/link validation checks repository-local links only; it does not re-verify external URLs.
+
 ## Phase 1 Task 2 latest two-finding remediation (2026-07-17)
 
 - [x] Publication independently recomputes the complete hard-gate result from current immutable inputs.

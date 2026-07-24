@@ -15,3 +15,5 @@ Primary evidence and access dates are in `docs/data/DATA_SOURCE_MATRIX.md`. A ta
 Phase 1 cannot ingest real data until every used row has approval evidence for the exact use. News, forecasts, governance narratives and benchmark branding are excluded from MVP unless separately approved.
 
 Task 2 adds the executable `DataUsagePolicy` registry. **Verified human scope (2026-07-13):** private household research, no public/paid/third-party/social distribution, and no external-AI transfer of licensed raw data absent explicit provider permission. This does not resolve any `?` above; no provider is approved.
+
+**Verified — post-merge closeout, 2026-07-24:** Task 2 merged on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`, but no provider, product or agreement passed the licensing gate. Real-data operation remains blocked. Provider selection and RFI evidence work belongs to separately reviewed Phase 1 Task 3, which has not been implemented.

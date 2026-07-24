@@ -95,3 +95,11 @@ The five 2026-07-13 reviews ended with no reported critical/high blocker in thei
 **Verification, limitation and decision.** The primary agent ran 169 full-suite, 125 unit, 26 property and 108 focused provider-remediation tests. Structure/link, compile, Ruff, strict mypy, build, installed-wheel smoke, dependency audit, Gitleaks and diff checks passed locally. The original five specialist agents were not reactivated and did not independently review this remediation. No new subagent review was run. These checks are not a substitute for the requested new independent ChatGPT architecture review. Final pushed-head CI evidence is appended in `RELEASE_CHECKLIST.md`. PR #4 remains draft and unmerged.
 
 **Verified — pushed validation.** Code/documentation head `ce4b771b9cb5d231de40704c855c6e523a73faf6` passed GitHub Actions run 29545604918. The `quality`, `dependency-audit` and `secret-scan` jobs all concluded `success`. The subsequent evidence-only commit and exact final branch head are reported in PR #4 because a commit cannot contain its own content-derived SHA.
+
+## Post-merge closeout — 2026-07-24
+
+**Verified:** the preceding sections are point-in-time review records. Their statements that PR #4 was draft or unmerged were accurate when written and are intentionally not rewritten. PR #4 subsequently merged into `main` on 2026-07-17 as commit `a953fd4ba910906c250e94b1f419d04b55087993`.
+
+**Verified — final boundary:** Task 2 is completed. Its review and release evidence supports only the provider-entry architecture and synthetic evaluation harness. It approves no provider, product, agreement, real dataset, ranking, backtest, recommendation or real-data operation.
+
+**Proposal — next planned task:** Phase 1 Task 3 — Provider Selection and RFI requires a separate architecture/planning review before implementation. No Task 3 implementation is recorded here.
