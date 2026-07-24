@@ -20,6 +20,12 @@
 
 **Closeout validation limitation:** no closeout-branch CI result is claimed before the draft PR runs its workflow. Local structure/link validation checks repository-local links only; it does not re-verify external URLs.
 
+**Verified — historical context, 2026-07-24:** the preceding limitation records the state when the initial closeout commit was prepared, before its draft-PR workflow completed.
+
+**Verified — pushed validation, 2026-07-24:** exact documentation-only closeout head `b607559e017e86015d165fb53d64aa810c46200e` passed GitHub Actions run [30060336043](https://github.com/yashindulkar/bharat-equity-intelligence/actions/runs/30060336043); `quality`, `dependency-audit` and `secret-scan` all concluded `success`.
+
+**Verified — validation boundary:** this CI validates only the documentation-only closeout head. It does not approve or implement Task 3, any provider/product/agreement, real data or production operation.
+
 ## Phase 1 Task 2 latest two-finding remediation (2026-07-17)
 
 - [x] Publication independently recomputes the complete hard-gate result from current immutable inputs.
